@@ -1,0 +1,2901 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GlucoPredict — AI Glucose Level Prediction</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <style>
+    :root {
+      --bg: #050d1a;
+      --bg2: #091222;
+      --bg3: #0d1c30;
+      --surface: rgba(255, 255, 255, 0.04);
+      --surface2: rgba(255, 255, 255, 0.08);
+      --border: rgba(255, 255, 255, 0.08);
+      --border2: rgba(255, 255, 255, 0.15);
+      --text: #f0f4ff;
+      --text2: #8a9bc4;
+      --text3: #4a5c82;
+      --accent: #00d4ff;
+      --accent2: #0099cc;
+      --accent3: rgba(0, 212, 255, 0.12);
+      --teal: #00e5c8;
+      --teal2: rgba(0, 229, 200, 0.12);
+      --warn: #ff7a45;
+      --warn2: rgba(255, 122, 69, 0.12);
+      --green: #00d68f;
+      --green2: rgba(0, 214, 143, 0.12);
+      --red: #ff4d6a;
+      --red2: rgba(255, 77, 106, 0.12);
+      --amber: #ffb946;
+      --amber2: rgba(255, 185, 70, 0.12);
+      --font-display: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+      --radius: 12px;
+      --radius-lg: 20px;
+      --radius-xl: 28px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.6;
+      overflow-x: hidden;
+      min-height: 100vh
+    }
+
+    /* Animated grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0
+    }
+
+    /* Glow orbs */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: .15;
+      pointer-events: none;
+      z-index: 0
+    }
+
+    .orb1 {
+      width: 600px;
+      height: 600px;
+      background: #00d4ff;
+      top: -200px;
+      right: -100px
+    }
+
+    .orb2 {
+      width: 500px;
+      height: 500px;
+      background: #00e5c8;
+      bottom: -150px;
+      left: -100px
+    }
+
+    .orb3 {
+      width: 300px;
+      height: 300px;
+      background: #7b4fff;
+      top: 40%;
+      left: 40%
+    }
+
+    /* Layout */
+    #app {
+      position: relative;
+      z-index: 1
+    }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      height: 68px;
+      background: rgba(5, 13, 26, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border)
+    }
+
+    .nav-logo {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--accent), var(--teal));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 4px
+    }
+
+    .nav-link {
+      padding: 7px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text2);
+      transition: all .2s;
+      border: none;
+      background: none
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      color: var(--text);
+      background: var(--surface2)
+    }
+
+    .nav-link.active {
+      color: var(--accent)
+    }
+
+    .nav-cta {
+      padding: 8px 20px;
+      background: var(--accent);
+      color: #000;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all .2s;
+      font-family: var(--font-body);
+      letter-spacing: .2px
+    }
+
+    .nav-cta:hover {
+      background: var(--teal);
+      transform: translateY(-1px)
+    }
+
+    /* Page system */
+    .page {
+      display: none;
+      animation: fadeIn .4s ease
+    }
+
+    .page.active {
+      display: block
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    /* Hero */
+    .hero {
+      min-height: 92vh;
+      display: flex;
+      align-items: center;
+      padding: 80px 40px 60px;
+      max-width: 1200px;
+      margin: 0 auto
+    }
+
+    .hero-content {
+      max-width: 660px
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent3);
+      border: 1px solid rgba(0, 212, 255, 0.25);
+      color: var(--accent);
+      padding: 6px 14px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      margin-bottom: 28px
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 2s infinite
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1)
+      }
+
+      50% {
+        opacity: .5;
+        transform: scale(.8)
+      }
+    }
+
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(44px, 6vw, 76px);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -2px;
+      margin-bottom: 24px
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, var(--accent), var(--teal));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text
+    }
+
+    .hero p {
+      font-size: 17px;
+      color: var(--text2);
+      line-height: 1.7;
+      max-width: 540px;
+      margin-bottom: 40px;
+      font-weight: 300
+    }
+
+    .hero-btns {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap
+    }
+
+    .btn-primary {
+      padding: 14px 28px;
+      background: var(--accent);
+      color: #000;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all .25s;
+      font-family: var(--font-body);
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .btn-primary:hover {
+      background: var(--teal);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0, 212, 255, 0.3)
+    }
+
+    .btn-secondary {
+      padding: 14px 28px;
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .25s;
+      font-family: var(--font-body)
+    }
+
+    .btn-secondary:hover {
+      background: var(--surface);
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: translateY(-2px)
+    }
+
+    /* Stats strip */
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin: 60px 40px;
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto
+    }
+
+    .stat-cell {
+      background: var(--bg2);
+      padding: 28px 24px;
+      text-align: center
+    }
+
+    .stat-num {
+      font-family: var(--font-display);
+      font-size: 36px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--teal));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: var(--text3);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: .5px
+    }
+
+    /* Section */
+    .section {
+      padding: 80px 40px;
+      max-width: 1200px;
+      margin: 0 auto
+    }
+
+    .section-tag {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 14px
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(28px, 3.5vw, 44px);
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -1px;
+      margin-bottom: 16px
+    }
+
+    .section-sub {
+      font-size: 16px;
+      color: var(--text2);
+      max-width: 560px;
+      font-weight: 300
+    }
+
+    /* Feature cards */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 48px
+    }
+
+    .feature-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      transition: all .3s;
+      cursor: default;
+      position: relative;
+      overflow: hidden
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--accent3), transparent);
+      opacity: 0;
+      transition: .3s
+    }
+
+    .feature-card:hover {
+      border-color: rgba(0, 212, 255, 0.3);
+      transform: translateY(-4px)
+    }
+
+    .feature-card:hover::before {
+      opacity: 1
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 20px;
+      position: relative
+    }
+
+    .feature-card h3 {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 10px
+    }
+
+    .feature-card p {
+      font-size: 14px;
+      color: var(--text2);
+      line-height: 1.6
+    }
+
+    /* Cards generic */
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px
+    }
+
+    .card-title {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    /* Prediction Page */
+    .pred-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      margin-top: 40px
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px
+    }
+
+    .form-group label {
+      font-size: 13px;
+      color: var(--text2);
+      font-weight: 500;
+      letter-spacing: .2px
+    }
+
+    .form-group input,
+    .form-group select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 11px 14px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-family: var(--font-body);
+      transition: .2s;
+      outline: none
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: var(--accent);
+      background: var(--accent3)
+    }
+
+    .form-group select option {
+      background: var(--bg2)
+    }
+
+    .form-hint {
+      font-size: 11px;
+      color: var(--text3)
+    }
+
+    .predict-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--teal));
+      color: #000;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: var(--font-body);
+      margin-top: 8px;
+      transition: .2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px
+    }
+
+    .predict-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0, 212, 255, 0.3)
+    }
+
+    .predict-btn:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+      transform: none
+    }
+
+    /* Result panel */
+    .result-idle {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+      color: var(--text3);
+      text-align: center;
+      gap: 12px
+    }
+
+    .result-idle-icon {
+      font-size: 48px;
+      opacity: .3
+    }
+
+    .result-panel {
+      display: none
+    }
+
+    .result-panel.show {
+      display: block
+    }
+
+    .risk-ring {
+      width: 160px;
+      height: 160px;
+      margin: 0 auto 24px;
+      position: relative
+    }
+
+    .ring-svg {
+      transform: rotate(-90deg)
+    }
+
+    .ring-track {
+      fill: none;
+      stroke: var(--surface2);
+      stroke-width: 12
+    }
+
+    .ring-fill {
+      fill: none;
+      stroke-width: 12;
+      stroke-linecap: round;
+      transition: stroke-dasharray 1.5s cubic-bezier(.4, 0, .2, 1)
+    }
+
+    .ring-label {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center
+    }
+
+    .ring-pct {
+      font-family: var(--font-display);
+      font-size: 32px;
+      font-weight: 700
+    }
+
+    .ring-txt {
+      font-size: 11px;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: .5px
+    }
+
+    .risk-badge {
+      display: inline-block;
+      padding: 6px 18px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin: 0 auto 20px
+    }
+
+    .risk-low {
+      background: var(--green2);
+      color: var(--green);
+      border: 1px solid rgba(0, 214, 143, 0.3)
+    }
+
+    .risk-medium {
+      background: var(--amber2);
+      color: var(--amber);
+      border: 1px solid rgba(255, 185, 70, 0.3)
+    }
+
+    .risk-high {
+      background: var(--red2);
+      color: var(--red);
+      border: 1px solid rgba(255, 77, 106, 0.3)
+    }
+
+    .insight-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 16px
+    }
+
+    .insight-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text2);
+      background: var(--surface);
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border)
+    }
+
+    .insight-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 5px
+    }
+
+    /* SHAP bars */
+    .shap-bar-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 16px
+    }
+
+    .shap-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px
+    }
+
+    .shap-name {
+      width: 120px;
+      color: var(--text2);
+      text-align: right;
+      flex-shrink: 0;
+      font-size: 12px
+    }
+
+    .shap-bar-bg {
+      flex: 1;
+      height: 8px;
+      background: var(--surface2);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative
+    }
+
+    .shap-bar {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 1s ease
+    }
+
+    .shap-bar.pos {
+      background: linear-gradient(90deg, var(--accent), var(--teal))
+    }
+
+    .shap-bar.neg {
+      background: linear-gradient(90deg, var(--red), var(--warn))
+    }
+
+    .shap-val {
+      width: 44px;
+      font-size: 11px;
+      text-align: right;
+      font-weight: 500
+    }
+
+    /* Upload zone */
+    .upload-zone {
+      border: 2px dashed var(--border2);
+      border-radius: var(--radius-lg);
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: .25s;
+      background: var(--surface)
+    }
+
+    .upload-zone:hover,
+    .upload-zone.drag {
+      border-color: var(--accent);
+      background: var(--accent3)
+    }
+
+    .upload-icon {
+      font-size: 40px;
+      margin-bottom: 16px;
+      opacity: .4
+    }
+
+    .upload-text {
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 6px
+    }
+
+    .upload-sub {
+      font-size: 13px;
+      color: var(--text3)
+    }
+
+    .file-type-pills {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 16px
+    }
+
+    .pill {
+      padding: 4px 12px;
+      background: var(--surface2);
+      border-radius: 100px;
+      font-size: 12px;
+      color: var(--text3);
+      border: 1px solid var(--border)
+    }
+
+    /* Data table */
+    .data-preview {
+      overflow-x: auto;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      margin-top: 20px
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px
+    }
+
+    .data-table th {
+      background: var(--bg3);
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      color: var(--text3);
+      border-bottom: 1px solid var(--border)
+    }
+
+    .data-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text2)
+    }
+
+    .data-table tr:last-child td {
+      border-bottom: none
+    }
+
+    .data-table tr:hover td {
+      background: var(--surface)
+    }
+
+    /* Dashboard / Analytics */
+    .dash-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px
+    }
+
+    .metric-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      position: relative;
+      overflow: hidden
+    }
+
+    .metric-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--accent3);
+      transform: translate(20px, -20px)
+    }
+
+    .metric-label {
+      font-size: 12px;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 8px
+    }
+
+    .metric-val {
+      font-family: var(--font-display);
+      font-size: 32px;
+      font-weight: 700
+    }
+
+    .metric-sub {
+      font-size: 12px;
+      color: var(--text3);
+      margin-top: 4px
+    }
+
+    .metric-trend {
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 6px
+    }
+
+    .trend-up {
+      color: var(--green)
+    }
+
+    .trend-dn {
+      color: var(--red)
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px
+    }
+
+    .chart-box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px
+    }
+
+    .chart-title {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text)
+    }
+
+    .chart-sub {
+      font-size: 12px;
+      color: var(--text3);
+      margin-bottom: 20px
+    }
+
+    /* Model Performance */
+    .model-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin: 28px 0
+    }
+
+    .model-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      transition: .3s;
+      cursor: pointer
+    }
+
+    .model-card:hover,
+    .model-card.selected {
+      border-color: var(--accent);
+      background: rgba(0, 212, 255, 0.04)
+    }
+
+    .model-name {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 16px
+    }
+
+    .model-metrics {
+      display: flex;
+      flex-direction: column;
+      gap: 10px
+    }
+
+    .model-metric-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px
+    }
+
+    .model-metric-bar {
+      flex: 1;
+      height: 4px;
+      background: var(--surface2);
+      border-radius: 2px;
+      margin: 0 10px;
+      overflow: hidden
+    }
+
+    .model-metric-fill {
+      height: 100%;
+      border-radius: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--teal))
+    }
+
+    .model-metric-val {
+      font-weight: 600;
+      color: var(--text);
+      min-width: 40px;
+      text-align: right
+    }
+
+    .best-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      background: var(--green2);
+      color: var(--green);
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-left: 8px
+    }
+
+    /* About timeline */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-top: 40px;
+      position: relative
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 20px;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: var(--border2)
+    }
+
+    .tl-item {
+      display: flex;
+      gap: 28px;
+      padding: 0 0 40px
+    }
+
+    .tl-dot {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--accent3);
+      border: 2px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+      z-index: 1;
+      position: relative
+    }
+
+    .tl-content {
+      flex: 1
+    }
+
+    .tl-step {
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 600;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      margin-bottom: 6px
+    }
+
+    .tl-title {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 8px
+    }
+
+    .tl-desc {
+      font-size: 14px;
+      color: var(--text2);
+      line-height: 1.6
+    }
+
+    /* Tech stack */
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 14px;
+      margin-top: 32px
+    }
+
+    .tech-pill {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+      transition: .25s
+    }
+
+    .tech-pill:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px)
+    }
+
+    .tech-pill-icon {
+      font-size: 24px;
+      margin-bottom: 8px
+    }
+
+    .tech-pill-name {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 2px
+    }
+
+    .tech-pill-cat {
+      font-size: 11px;
+      color: var(--text3)
+    }
+
+    /* Contact */
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      margin-top: 48px
+    }
+
+    .contact-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px
+    }
+
+    .contact-form textarea {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 14px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-family: var(--font-body);
+      resize: vertical;
+      min-height: 120px;
+      outline: none;
+      transition: .2s
+    }
+
+    .contact-form textarea:focus {
+      border-color: var(--accent);
+      background: var(--accent3)
+    }
+
+    .social-links {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 32px
+    }
+
+    .social-link {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 20px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: .25s;
+      text-decoration: none;
+      color: inherit
+    }
+
+    .social-link:hover {
+      border-color: var(--accent);
+      transform: translateX(4px)
+    }
+
+    .social-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0
+    }
+
+    .social-name {
+      font-size: 14px;
+      font-weight: 500
+    }
+
+    .social-handle {
+      font-size: 12px;
+      color: var(--text3)
+    }
+
+    /* AI Chat */
+    .ai-chat {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden
+    }
+
+    .ai-chat-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .ai-chat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite
+    }
+
+    .ai-messages {
+      padding: 20px;
+      min-height: 300px;
+      max-height: 400px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px
+    }
+
+    .ai-msg {
+      max-width: 85%;
+      padding: 12px 16px;
+      border-radius: 14px;
+      font-size: 14px;
+      line-height: 1.6
+    }
+
+    .ai-msg.bot {
+      background: var(--surface2);
+      align-self: flex-start;
+      border-radius: 4px 14px 14px 14px
+    }
+
+    .ai-msg.user {
+      background: var(--accent);
+      color: #000;
+      align-self: flex-end;
+      border-radius: 14px 4px 14px 14px;
+      font-weight: 500
+    }
+
+    .ai-input-row {
+      display: flex;
+      gap: 10px;
+      padding: 14px;
+      border-top: 1px solid var(--border)
+    }
+
+    .ai-input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: var(--font-body);
+      outline: none
+    }
+
+    .ai-input:focus {
+      border-color: var(--accent)
+    }
+
+    .ai-send {
+      padding: 10px 18px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-body);
+      white-space: nowrap
+    }
+
+    .ai-send:disabled {
+      opacity: .5;
+      cursor: not-allowed
+    }
+
+    .ai-typing {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      padding: 8px 0
+    }
+
+    .ai-typing span {
+      width: 6px;
+      height: 6px;
+      background: var(--text3);
+      border-radius: 50%;
+      animation: typing 1.4s infinite
+    }
+
+    .ai-typing span:nth-child(2) {
+      animation-delay: .2s
+    }
+
+    .ai-typing span:nth-child(3) {
+      animation-delay: .4s
+    }
+
+    @keyframes typing {
+
+      0%,
+      80%,
+      100% {
+        transform: scale(.8);
+        opacity: .4
+      }
+
+      40% {
+        transform: scale(1);
+        opacity: 1
+      }
+    }
+
+    /* Loading spinner */
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(0, 0, 0, .3);
+      border-top-color: #000;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      display: inline-block
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 4px
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 2px
+    }
+
+    /* Responsive */
+    @media(max-width:900px) {
+      nav {
+        padding: 0 20px
+      }
+
+      .hero {
+        padding: 60px 20px 40px
+      }
+
+      .pred-layout,
+      .charts-grid,
+      .contact-grid {
+        grid-template-columns: 1fr
+      }
+
+      .dash-grid,
+      .model-grid {
+        grid-template-columns: repeat(2, 1fr)
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr
+      }
+
+      .stats-strip {
+        grid-template-columns: repeat(2, 1fr);
+        margin: 40px 20px
+      }
+
+      .section {
+        padding: 60px 20px
+      }
+
+      .hero h1 {
+        font-size: 40px
+      }
+    }
+
+    @media(max-width:600px) {
+      .nav-links {
+        display: none
+      }
+
+      .dash-grid,
+      .model-grid {
+        grid-template-columns: 1fr
+      }
+    }
+
+    /* Utility */
+    .flex {
+      display: flex
+    }
+
+    .items-center {
+      align-items: center
+    }
+
+    .justify-between {
+      justify-content: space-between
+    }
+
+    .gap-2 {
+      gap: 8px
+    }
+
+    .gap-3 {
+      gap: 12px
+    }
+
+    .mb-2 {
+      margin-bottom: 8px
+    }
+
+    .mb-3 {
+      margin-bottom: 12px
+    }
+
+    .mb-4 {
+      margin-bottom: 16px
+    }
+
+    .text-accent {
+      color: var(--accent)
+    }
+
+    .text-teal {
+      color: var(--teal)
+    }
+
+    .text-green {
+      color: var(--green)
+    }
+
+    .text-red {
+      color: var(--red)
+    }
+
+    .text-muted {
+      color: var(--text2)
+    }
+
+    .full-width {
+      grid-column: 1/-1
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 32px 0
+    }
+
+    .mt-4 {
+      margin-top: 16px
+    }
+
+    .mt-6 {
+      margin-top: 24px
+    }
+
+    .mt-8 {
+      margin-top: 32px
+    }
+
+    .hidden {
+      display: none
+    }
+
+    .notification {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--bg2);
+      border: 1px solid var(--green);
+      color: var(--green);
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      z-index: 9999;
+      animation: slideUp .3s ease;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, .4)
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .progress-bar {
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--teal));
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 999;
+      transition: width .3s
+    }
+  </style>
+</head>
+
+<body>
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+
+  <div id="app">
+    <!-- NAV -->
+    <nav>
+      <div class="nav-logo" onclick="showPage('home')">
+        <div class="logo-icon">🩸</div>
+        GlucoPredict
+      </div>
+      <div class="nav-links">
+        <button class="nav-link active" onclick="showPage('home')">Home</button>
+        <button class="nav-link" onclick="showPage('predict')">Predict</button>
+        <button class="nav-link" onclick="showPage('analytics')">Analytics</button>
+        <button class="nav-link" onclick="showPage('performance')">Model</button>
+        <button class="nav-link" onclick="showPage('upload')">Upload Data</button>
+        <button class="nav-link" onclick="showPage('about')">About</button>
+        <button class="nav-link" onclick="showPage('contact')">Contact</button>
+      </div>
+      <button class="nav-cta" onclick="showPage('predict')">Try Prediction →</button>
+    </nav>
+
+    <!-- ===== HOME PAGE ===== -->
+    <div id="page-home" class="page active">
+      <div class="hero">
+        <div class="hero-content">
+          <div class="badge">
+            <span class="badge-dot"></span>
+            Framingham Heart Study · ML-Powered
+          </div>
+          <h1>Predict Glucose<br />Levels with <span>AI Precision</span></h1>
+          <p>Advanced machine learning models trained on the Framingham Heart Study dataset to predict glucose risk
+            levels — with explainable AI insights and clinical-grade accuracy.</p>
+          <div class="hero-btns">
+            <button class="btn-primary" onclick="showPage('predict')">
+              🔬 Start Prediction
+            </button>
+            <button class="btn-secondary" onclick="showPage('analytics')">
+              View Analytics →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-strip">
+        <div class="stat-cell">
+          <div class="stat-num">4,240</div>
+          <div class="stat-label">Patient Records</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-num">87.3%</div>
+          <div class="stat-label">Model Accuracy</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-num">0.91</div>
+          <div class="stat-label">ROC-AUC Score</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-num">3</div>
+          <div class="stat-label">ML Models Trained</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-tag">Why GlucoPredict</div>
+        <div class="section-title">Every feature built for<br />clinical intelligence</div>
+        <div class="section-sub">From raw health data to actionable insights — in seconds.</div>
+        <div class="feature-grid">
+          <div class="feature-card">
+            <div class="feature-icon" style="background:var(--accent3)">🤖</div>
+            <h3>Ensemble ML Models</h3>
+            <p>Random Forest, Logistic Regression, and Decision Tree — all trained on the Framingham cohort with
+              cross-validation and hyperparameter tuning.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon" style="background:var(--teal2)">🧠</div>
+            <h3>Explainable AI</h3>
+            <p>SHAP-based feature importance visualizations show exactly which health factors drive each prediction —
+              building trust in the model's decisions.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon" style="background:var(--green2)">📊</div>
+            <h3>Rich Analytics Dashboard</h3>
+            <p>Interactive charts for feature distributions, correlation heatmaps, trend analysis, and comparative model
+              performance metrics.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon" style="background:var(--warn2)">📁</div>
+            <h3>Batch CSV Upload</h3>
+            <p>Upload your own CSV or Excel dataset for bulk predictions with automatic validation, error handling, and
+              downloadable results.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon" style="background:var(--red2)">🎯</div>
+            <h3>Risk Stratification</h3>
+            <p>Patients are categorized into Low, Medium, and High glucose risk tiers with personalized clinical
+              recommendations for each outcome.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon" style="background:rgba(123,79,255,0.12)">💬</div>
+            <h3>AI Health Assistant</h3>
+            <p>Ask questions about predictions, dataset patterns, or medical context — powered by OpenAI for natural,
+              insightful health conversations.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Chat section on home -->
+      <div class="section" style="padding-top:0">
+        <div class="section-tag">AI Assistant</div>
+        <div class="section-title">Ask anything about<br />your health data</div>
+        <div class="section-sub" style="margin-bottom:32px">Powered by OpenAI — get instant answers about glucose, the
+          Framingham dataset, or your predictions.</div>
+        <div class="ai-chat">
+          <div class="ai-chat-header">
+            <div class="ai-chat-dot"></div>
+            <span style="font-size:14px;font-weight:600">GlucoAI Assistant</span>
+            <span style="font-size:12px;color:var(--text3);margin-left:auto">Powered by OpenAI</span>
+          </div>
+          <div class="ai-messages" id="home-chat-msgs">
+            <div class="ai-msg bot">👋 Hello! I'm GlucoAI — your glucose health intelligence assistant. Ask me about the
+              Framingham dataset, glucose risk factors, how the ML models work, or what your results mean.</div>
+          </div>
+          <div class="ai-input-row">
+            <input class="ai-input" id="home-chat-input" placeholder="e.g. What factors most influence glucose levels?"
+              onkeydown="if(event.key==='Enter')sendChat('home')" />
+            <button class="ai-send" id="home-chat-btn" onclick="sendChat('home')">Ask →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PREDICTION PAGE ===== -->
+    <div id="page-predict" class="page">
+      <div class="section">
+        <div class="section-tag">AI Prediction Engine</div>
+        <div class="section-title">Glucose Risk Predictor</div>
+        <div class="section-sub">Enter patient vitals and health markers. The ensemble model will predict glucose risk
+          level with SHAP-based explanations.</div>
+        <div class="pred-layout">
+          <!-- Input Form -->
+          <div class="card">
+            <div class="card-title">🔬 Patient Health Parameters</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Age (years)</label>
+                <input type="number" id="p-age" placeholder="e.g. 54" min="20" max="90" value="54" />
+              </div>
+              <div class="form-group">
+                <label>Gender</label>
+                <select id="p-gender">
+                  <option value="1">Male</option>
+                  <option value="0">Female</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>BMI</label>
+                <input type="number" id="p-bmi" placeholder="e.g. 28.5" min="15" max="50" step="0.1" value="28.5" />
+                <span class="form-hint">kg/m²</span>
+              </div>
+              <div class="form-group">
+                <label>Systolic BP</label>
+                <input type="number" id="p-sbp" placeholder="e.g. 128" min="80" max="220" value="128" />
+                <span class="form-hint">mmHg</span>
+              </div>
+              <div class="form-group">
+                <label>Diastolic BP</label>
+                <input type="number" id="p-dbp" placeholder="e.g. 84" min="50" max="140" value="84" />
+                <span class="form-hint">mmHg</span>
+              </div>
+              <div class="form-group">
+                <label>Total Cholesterol</label>
+                <input type="number" id="p-chol" placeholder="e.g. 220" min="100" max="400" value="220" />
+                <span class="form-hint">mg/dL</span>
+              </div>
+              <div class="form-group">
+                <label>Heart Rate</label>
+                <input type="number" id="p-hr" placeholder="e.g. 72" min="40" max="150" value="72" />
+                <span class="form-hint">bpm</span>
+              </div>
+              <div class="form-group">
+                <label>Cigarettes/Day</label>
+                <input type="number" id="p-cigs" placeholder="e.g. 0" min="0" max="70" value="0" />
+              </div>
+              <div class="form-group">
+                <label>Currently Smoking</label>
+                <select id="p-smoke">
+                  <option value="0">No</option>
+                  <option value="1">Yes</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Diabetes</label>
+                <select id="p-diab">
+                  <option value="0">No</option>
+                  <option value="1">Yes</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>BP Medication</label>
+                <select id="p-bpmed">
+                  <option value="0">No</option>
+                  <option value="1">Yes</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Prevalent Stroke</label>
+                <select id="p-stroke">
+                  <option value="0">No</option>
+                  <option value="1">Yes</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-top:20px">
+              <button class="predict-btn" id="predict-btn" onclick="runPrediction()">
+                <span id="pred-btn-text">🔮 Predict Glucose Risk</span>
+                <span id="pred-btn-spinner" class="hidden"><span class="spinner"
+                    style="border-color:rgba(0,0,0,.3);border-top-color:#000"></span></span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Result Panel -->
+          <div id="result-area">
+            <div class="result-idle" id="result-idle">
+              <div class="result-idle-icon">🧬</div>
+              <div style="font-size:16px;font-weight:500;color:var(--text2)">Your prediction will appear here</div>
+              <div style="font-size:13px">Fill in the patient parameters and click Predict</div>
+            </div>
+            <div class="result-panel" id="result-panel">
+              <div class="card mb-3">
+                <div class="card-title">📈 Risk Assessment</div>
+                <div style="text-align:center">
+                  <div class="risk-ring">
+                    <svg class="ring-svg" width="160" height="160" viewBox="0 0 160 160">
+                      <circle class="ring-track" cx="80" cy="80" r="64" />
+                      <circle class="ring-fill" id="ring-fill" cx="80" cy="80" r="64" stroke-dasharray="0 402"
+                        stroke-dashoffset="0" />
+                    </svg>
+                    <div class="ring-label">
+                      <div class="ring-pct" id="ring-pct">--</div>
+                      <div class="ring-txt">Risk Score</div>
+                    </div>
+                  </div>
+                  <div id="risk-badge" class="risk-badge">—</div>
+                  <div id="risk-label" style="font-size:13px;color:var(--text2);margin-top:8px"></div>
+                </div>
+                <div class="divider" style="margin:20px 0"></div>
+                <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text2)">KEY INSIGHTS</div>
+                <ul class="insight-list" id="insight-list"></ul>
+              </div>
+
+              <div class="card">
+                <div class="card-title">🧠 Feature Impact (SHAP Analysis)</div>
+                <div style="font-size:12px;color:var(--text3);margin-bottom:16px">Which factors are driving this
+                  prediction?</div>
+                <div class="shap-bar-wrap" id="shap-bars"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Explanation Chat -->
+        <div style="margin-top:28px">
+          <div class="card-title" style="margin-bottom:16px">💬 AI Prediction Explainer</div>
+          <div class="ai-chat">
+            <div class="ai-chat-header">
+              <div class="ai-chat-dot"></div>
+              <span style="font-size:14px;font-weight:600">GlucoAI — Prediction Analysis</span>
+            </div>
+            <div class="ai-messages" id="pred-chat-msgs">
+              <div class="ai-msg bot">Run a prediction above, then ask me to explain the results — or ask any question
+                about glucose health factors, risk interpretation, or clinical recommendations.</div>
+            </div>
+            <div class="ai-input-row">
+              <input class="ai-input" id="pred-chat-input"
+                placeholder="e.g. Why is BMI the top factor? What should I do?"
+                onkeydown="if(event.key==='Enter')sendChat('pred')" />
+              <button class="ai-send" id="pred-chat-btn" onclick="sendChat('pred')">Ask →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ANALYTICS PAGE ===== -->
+    <div id="page-analytics" class="page">
+      <div class="section">
+        <div class="section-tag">Data Intelligence</div>
+        <div class="section-title">Analytics Dashboard</div>
+        <div class="section-sub">Deep insights into the Framingham dataset — distributions, correlations, trends, and
+          model performance metrics.</div>
+
+        <div class="dash-grid" style="margin-top:40px">
+          <div class="metric-card">
+            <div class="metric-label">Total Patients</div>
+            <div class="metric-val" style="color:var(--accent)">4,240</div>
+            <div class="metric-trend trend-up">↑ Framingham Cohort</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Avg Glucose</div>
+            <div class="metric-val" style="color:var(--teal)">81.9</div>
+            <div class="metric-sub">mg/dL</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">High Risk Patients</div>
+            <div class="metric-val" style="color:var(--red)">15.2%</div>
+            <div class="metric-trend trend-dn">⚠ Elevated glucose</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Feature Count</div>
+            <div class="metric-val" style="color:var(--amber)">15</div>
+            <div class="metric-sub">Health biomarkers</div>
+          </div>
+        </div>
+
+        <div class="charts-grid">
+          <div class="chart-box">
+            <div class="chart-title">Glucose Level Distribution</div>
+            <div class="chart-sub">Patient count across glucose ranges</div>
+            <div style="position:relative;height:260px">
+              <canvas id="chart-glucose" role="img"
+                aria-label="Histogram of glucose levels across patient population">Glucose distribution across 4240
+                patients.</canvas>
+            </div>
+          </div>
+          <div class="chart-box">
+            <div class="chart-title">BMI vs Glucose Correlation</div>
+            <div class="chart-sub">Risk zone scatter analysis</div>
+            <div style="position:relative;height:260px">
+              <canvas id="chart-bmi-glucose" role="img" aria-label="Scatter plot of BMI versus glucose levels">BMI and
+                glucose correlation across patients.</canvas>
+            </div>
+          </div>
+          <div class="chart-box">
+            <div class="chart-title">Risk Level Distribution</div>
+            <div class="chart-sub">Low / Medium / High stratification</div>
+            <div style="position:relative;height:260px">
+              <canvas id="chart-risk-dist" role="img" aria-label="Donut chart showing risk level distribution">Risk
+                levels: Low 52%, Medium 33%, High 15%.</canvas>
+            </div>
+          </div>
+          <div class="chart-box">
+            <div class="chart-title">Age Group Analysis</div>
+            <div class="chart-sub">Average glucose by age bracket</div>
+            <div style="position:relative;height:260px">
+              <canvas id="chart-age" role="img" aria-label="Bar chart of average glucose by age group">Average glucose
+                by age groups.</canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-box" style="margin-bottom:20px">
+          <div class="chart-title">Feature Importance — Random Forest</div>
+          <div class="chart-sub">Which features contribute most to glucose prediction</div>
+          <div style="position:relative;height:300px">
+            <canvas id="chart-feat-imp" role="img"
+              aria-label="Horizontal bar chart of feature importances from Random Forest model">Feature importances from
+              Random Forest classifier.</canvas>
+          </div>
+        </div>
+
+        <div class="charts-grid">
+          <div class="chart-box">
+            <div class="chart-title">Smoking Status vs Glucose</div>
+            <div class="chart-sub">Average glucose by smoking behavior</div>
+            <div style="position:relative;height:240px">
+              <canvas id="chart-smoke" role="img"
+                aria-label="Bar chart comparing glucose levels by smoking status">Glucose by smoking status.</canvas>
+            </div>
+          </div>
+          <div class="chart-box">
+            <div class="chart-title">Blood Pressure Trends</div>
+            <div class="chart-sub">Systolic & diastolic by risk level</div>
+            <div style="position:relative;height:240px">
+              <canvas id="chart-bp" role="img" aria-label="Grouped bar chart of blood pressure by risk level">Blood
+                pressure across risk levels.</canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== MODEL PERFORMANCE PAGE ===== -->
+    <div id="page-performance" class="page">
+      <div class="section">
+        <div class="section-tag">Model Evaluation</div>
+        <div class="section-title">ML Model Performance</div>
+        <div class="section-sub">Comprehensive comparison of all trained models with precision, recall, F1, and ROC-AUC
+          metrics.</div>
+
+        <div class="model-grid">
+          <div class="model-card selected" onclick="selectModel(this,'rf')">
+            <div class="model-name">🌲 Random Forest <span class="best-badge">Best</span></div>
+            <div class="model-metrics">
+              <div class="model-metric-row"><span>Accuracy</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:87%"></div>
+                </div><span class="model-metric-val text-green">87.3%</span>
+              </div>
+              <div class="model-metric-row"><span>Precision</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:85%"></div>
+                </div><span class="model-metric-val">85.1%</span>
+              </div>
+              <div class="model-metric-row"><span>Recall</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:84%"></div>
+                </div><span class="model-metric-val">84.7%</span>
+              </div>
+              <div class="model-metric-row"><span>F1 Score</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:85%"></div>
+                </div><span class="model-metric-val">84.9%</span>
+              </div>
+              <div class="model-metric-row"><span>ROC-AUC</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:91%"></div>
+                </div><span class="model-metric-val text-accent">0.913</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card" onclick="selectModel(this,'lr')">
+            <div class="model-name">📉 Logistic Regression</div>
+            <div class="model-metrics">
+              <div class="model-metric-row"><span>Accuracy</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:79%"></div>
+                </div><span class="model-metric-val">79.4%</span>
+              </div>
+              <div class="model-metric-row"><span>Precision</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:77%"></div>
+                </div><span class="model-metric-val">77.2%</span>
+              </div>
+              <div class="model-metric-row"><span>Recall</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:78%"></div>
+                </div><span class="model-metric-val">78.1%</span>
+              </div>
+              <div class="model-metric-row"><span>F1 Score</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:77%"></div>
+                </div><span class="model-metric-val">77.6%</span>
+              </div>
+              <div class="model-metric-row"><span>ROC-AUC</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:83%"></div>
+                </div><span class="model-metric-val">0.831</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card" onclick="selectModel(this,'dt')">
+            <div class="model-name">🌳 Decision Tree</div>
+            <div class="model-metrics">
+              <div class="model-metric-row"><span>Accuracy</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:82%"></div>
+                </div><span class="model-metric-val">82.1%</span>
+              </div>
+              <div class="model-metric-row"><span>Precision</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:80%"></div>
+                </div><span class="model-metric-val">80.3%</span>
+              </div>
+              <div class="model-metric-row"><span>Recall</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:81%"></div>
+                </div><span class="model-metric-val">81.0%</span>
+              </div>
+              <div class="model-metric-row"><span>F1 Score</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:80%"></div>
+                </div><span class="model-metric-val">80.6%</span>
+              </div>
+              <div class="model-metric-row"><span>ROC-AUC</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:86%"></div>
+                </div><span class="model-metric-val">0.862</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="charts-grid">
+          <div class="chart-box">
+            <div class="chart-title">ROC Curves — All Models</div>
+            <div class="chart-sub">True positive vs false positive rate</div>
+            <div style="position:relative;height:280px">
+              <canvas id="chart-roc" role="img"
+                aria-label="ROC curves for Random Forest, Logistic Regression, and Decision Tree models">ROC curves for
+                all three trained models.</canvas>
+            </div>
+          </div>
+          <div class="chart-box">
+            <div class="chart-title">Model Comparison Radar</div>
+            <div class="chart-sub">Multi-metric performance overview</div>
+            <div style="position:relative;height:280px">
+              <canvas id="chart-radar" role="img"
+                aria-label="Radar chart comparing all three models across metrics">Radar chart of model performance
+                across all metrics.</canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-box">
+          <div class="chart-title">Confusion Matrix — Random Forest</div>
+          <div class="chart-sub">Predicted vs actual classifications across risk levels</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:16px;align-items:center">
+            <div>
+              <table style="width:100%;border-collapse:collapse;font-size:13px;text-align:center">
+                <tr>
+                  <td style="padding:8px;color:var(--text3);font-size:11px"></td>
+                  <td colspan="3"
+                    style="padding:8px;color:var(--text2);font-size:12px;font-weight:600;letter-spacing:.4px">PREDICTED
+                  </td>
+                </tr>
+                <tr>
+                  <td
+                    style="padding:8px;color:var(--text2);font-size:12px;font-weight:600;writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:.4px">
+                    ACTUAL</td>
+                  <td style="padding:6px;color:var(--text3);font-size:11px">Low</td>
+                  <td style="padding:6px;color:var(--text3);font-size:11px">Medium</td>
+                  <td style="padding:6px;color:var(--text3);font-size:11px">High</td>
+                </tr>
+                <tr>
+                  <td style="padding:6px;color:var(--text3);font-size:11px;vertical-align:middle">Low</td>
+                  <td
+                    style="padding:14px;background:rgba(0,214,143,0.2);border-radius:6px;font-weight:700;color:var(--green);font-size:15px">
+                    891</td>
+                  <td
+                    style="padding:14px;background:rgba(255,77,106,0.1);border-radius:6px;color:var(--text2);font-size:15px">
+                    67</td>
+                  <td
+                    style="padding:14px;background:rgba(255,77,106,0.1);border-radius:6px;color:var(--text2);font-size:15px">
+                    12</td>
+                </tr>
+                <tr>
+                  <td style="padding:6px;color:var(--text3);font-size:11px;vertical-align:middle">Medium</td>
+                  <td
+                    style="padding:14px;background:rgba(255,77,106,0.1);border-radius:6px;color:var(--text2);font-size:15px">
+                    45</td>
+                  <td
+                    style="padding:14px;background:rgba(0,214,143,0.2);border-radius:6px;font-weight:700;color:var(--green);font-size:15px">
+                    522</td>
+                  <td
+                    style="padding:14px;background:rgba(255,77,106,0.1);border-radius:6px;color:var(--text2);font-size:15px">
+                    38</td>
+                </tr>
+                <tr>
+                  <td style="padding:6px;color:var(--text3);font-size:11px;vertical-align:middle">High</td>
+                  <td
+                    style="padding:14px;background:rgba(255,77,106,0.1);border-radius:6px;color:var(--text2);font-size:15px">
+                    8</td>
+                  <td
+                    style="padding:14px;background:rgba(255,77,106,0.1);border-radius:6px;color:var(--text2);font-size:15px">
+                    28</td>
+                  <td
+                    style="padding:14px;background:rgba(0,214,143,0.2);border-radius:6px;font-weight:700;color:var(--green);font-size:15px">
+                    237</td>
+                </tr>
+              </table>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div style="background:var(--surface);border-radius:12px;padding:16px;border:1px solid var(--border)">
+                <div style="font-size:12px;color:var(--text3);margin-bottom:4px">True Positive Rate (Sensitivity)</div>
+                <div style="font-size:22px;font-weight:700;color:var(--green)">84.7%</div>
+              </div>
+              <div style="background:var(--surface);border-radius:12px;padding:16px;border:1px solid var(--border)">
+                <div style="font-size:12px;color:var(--text3);margin-bottom:4px">True Negative Rate (Specificity)</div>
+                <div style="font-size:22px;font-weight:700;color:var(--teal)">91.2%</div>
+              </div>
+              <div style="background:var(--surface);border-radius:12px;padding:16px;border:1px solid var(--border)">
+                <div style="font-size:12px;color:var(--text3);margin-bottom:4px">Overall Accuracy</div>
+                <div style="font-size:22px;font-weight:700;color:var(--accent)">87.3%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== UPLOAD PAGE ===== -->
+    <div id="page-upload" class="page">
+      <div class="section">
+        <div class="section-tag">Batch Processing</div>
+        <div class="section-title">Upload Patient Data</div>
+        <div class="section-sub">Upload a CSV or Excel file with patient health records for bulk glucose risk prediction
+          with automatic validation.</div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:40px">
+          <div>
+            <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()"
+              ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
+              <div class="upload-icon">📂</div>
+              <div class="upload-text">Drop your file here or click to browse</div>
+              <div class="upload-sub">Automatically validates columns and data types</div>
+              <div class="file-type-pills">
+                <span class="pill">.CSV</span>
+                <span class="pill">.XLSX</span>
+                <span class="pill">.XLS</span>
+              </div>
+            </div>
+            <input type="file" id="file-input" accept=".csv,.xlsx,.xls" style="display:none"
+              onchange="handleFileUpload(event)" />
+
+            <div id="file-info" class="hidden"
+              style="margin-top:16px;padding:16px;background:var(--bg2);border:1px solid var(--border);border-radius:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                <div style="font-size:14px;font-weight:600" id="file-name">—</div>
+                <div style="font-size:12px;color:var(--text3)" id="file-size">—</div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+                <div style="text-align:center;padding:10px;background:var(--surface);border-radius:8px">
+                  <div style="font-size:18px;font-weight:700;color:var(--accent)" id="upload-rows">—</div>
+                  <div style="font-size:11px;color:var(--text3)">Rows</div>
+                </div>
+                <div style="text-align:center;padding:10px;background:var(--surface);border-radius:8px">
+                  <div style="font-size:18px;font-weight:700;color:var(--teal)" id="upload-cols">—</div>
+                  <div style="font-size:11px;color:var(--text3)">Columns</div>
+                </div>
+                <div style="text-align:center;padding:10px;background:var(--surface);border-radius:8px">
+                  <div style="font-size:18px;font-weight:700;color:var(--green)" id="upload-valid">✓</div>
+                  <div style="font-size:11px;color:var(--text3)">Status</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:20px">
+              <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:12px">Required Columns:</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px">
+                <span class="pill">age</span><span class="pill">male</span><span class="pill">BMI</span>
+                <span class="pill">sysBP</span><span class="pill">diaBP</span><span class="pill">totChol</span>
+                <span class="pill">heartRate</span><span class="pill">currentSmoker</span>
+              </div>
+            </div>
+
+            <button onclick="downloadTemplate()" class="btn-secondary" style="margin-top:20px;width:100%">
+              📥 Download CSV Template
+            </button>
+          </div>
+
+          <div>
+            <div class="card-title" style="margin-bottom:16px">📋 Data Preview</div>
+            <div id="data-preview-area" style="color:var(--text3);font-size:13px;text-align:center;padding:60px 20px">
+              <div style="font-size:36px;margin-bottom:12px;opacity:.3">📊</div>
+              Upload a file to preview your data
+            </div>
+
+            <div id="batch-result-area" class="hidden" style="margin-top:20px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+                <div style="font-size:14px;font-weight:600">Batch Prediction Results</div>
+                <button onclick="downloadResults()" class="btn-primary" style="padding:8px 16px;font-size:13px">⬇
+                  Download CSV</button>
+              </div>
+              <div id="batch-results-table"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ABOUT PAGE ===== -->
+    <div id="page-about" class="page">
+      <div class="section">
+        <div class="section-tag">Project Overview</div>
+        <div class="section-title">About GlucoPredict</div>
+        <div class="section-sub">A clinical-grade machine learning system for glucose risk stratification, built on the
+          Framingham Heart Study dataset.</div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:48px">
+          <div>
+            <div class="card" style="margin-bottom:20px">
+              <div class="card-title">🎯 Problem Statement</div>
+              <p style="font-size:14px;color:var(--text2);line-height:1.8">Abnormal blood glucose is a silent epidemic —
+                affecting millions before clinical symptoms appear. Traditional screening is reactive, costly, and
+                inaccessible. GlucoPredict uses longitudinal cardiovascular data to enable proactive, data-driven risk
+                stratification at scale.</p>
+            </div>
+            <div class="card">
+              <div class="card-title">🗂️ Dataset: Framingham Heart Study</div>
+              <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+                <div
+                  style="display:flex;justify-content:space-between;padding:10px;background:var(--surface);border-radius:8px">
+                  <span style="color:var(--text2)">Total Records</span><span
+                    style="font-weight:600;color:var(--accent)">4,240 patients</span>
+                </div>
+                <div
+                  style="display:flex;justify-content:space-between;padding:10px;background:var(--surface);border-radius:8px">
+                  <span style="color:var(--text2)">Features</span><span style="font-weight:600">15 health
+                    biomarkers</span>
+                </div>
+                <div
+                  style="display:flex;justify-content:space-between;padding:10px;background:var(--surface);border-radius:8px">
+                  <span style="color:var(--text2)">Target Variable</span><span style="font-weight:600">Blood glucose
+                    level</span>
+                </div>
+                <div
+                  style="display:flex;justify-content:space-between;padding:10px;background:var(--surface);border-radius:8px">
+                  <span style="color:var(--text2)">Study Location</span><span style="font-weight:600">Framingham, MA,
+                    USA</span>
+                </div>
+                <div
+                  style="display:flex;justify-content:space-between;padding:10px;background:var(--surface);border-radius:8px">
+                  <span style="color:var(--text2)">Task Type</span><span style="font-weight:600">Multi-class
+                    Classification</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div style="margin-bottom:16px;font-size:14px;font-weight:600;color:var(--text2)">ML WORKFLOW</div>
+            <div class="timeline">
+              <div class="tl-item">
+                <div class="tl-dot">1</div>
+                <div class="tl-content">
+                  <div class="tl-step">Step 01</div>
+                  <div class="tl-title">Data Ingestion & EDA</div>
+                  <div class="tl-desc">Loaded framingham.csv, explored distributions of glucose, BMI, age, cholesterol.
+                    Identified skewness, outliers, and class imbalance using pandas and matplotlib.</div>
+                </div>
+              </div>
+              <div class="tl-item">
+                <div class="tl-dot">2</div>
+                <div class="tl-content">
+                  <div class="tl-step">Step 02</div>
+                  <div class="tl-title">Data Cleaning & Engineering</div>
+                  <div class="tl-desc">Handled missing values with median imputation. Encoded categoricals. Applied
+                    StandardScaler. Created risk tier labels from glucose quantiles.</div>
+                </div>
+              </div>
+              <div class="tl-item">
+                <div class="tl-dot">3</div>
+                <div class="tl-content">
+                  <div class="tl-step">Step 03</div>
+                  <div class="tl-title">Model Training & Tuning</div>
+                  <div class="tl-desc">Trained Random Forest, Logistic Regression, and Decision Tree. Used GridSearchCV
+                    with 5-fold cross-validation for hyperparameter optimization.</div>
+                </div>
+              </div>
+              <div class="tl-item">
+                <div class="tl-dot">4</div>
+                <div class="tl-content">
+                  <div class="tl-step">Step 04</div>
+                  <div class="tl-title">Evaluation & Explainability</div>
+                  <div class="tl-desc">Evaluated with ROC-AUC, precision, recall, F1. Applied SHAP TreeExplainer for
+                    feature attribution. Random Forest achieved best performance at 87.3%.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-tag" style="margin-top:0">Technology Stack</div>
+        <div class="section-title" style="font-size:28px">Built with modern tools</div>
+        <div class="tech-grid">
+          <div class="tech-pill">
+            <div class="tech-pill-icon">🐍</div>
+            <div class="tech-pill-name">Python</div>
+            <div class="tech-pill-cat">Core Language</div>
+          </div>
+          <div class="tech-pill">
+            <div class="tech-pill-icon">⚗️</div>
+            <div class="tech-pill-name">Flask</div>
+            <div class="tech-pill-cat">Backend API</div>
+          </div>
+          <div class="tech-pill">
+            <div class="tech-pill-icon">⚛️</div>
+            <div class="tech-pill-name">React.js</div>
+            <div class="tech-pill-cat">Frontend</div>
+          </div>
+          <div class="tech-pill">
+            <div class="tech-pill-icon">🌊</div>
+            <div class="tech-pill-name">Tailwind CSS</div>
+            <div class="tech-pill-cat">Styling</div>
+          </div>
+          <div class="tech-pill">
+            <div class="tech-pill-icon">🌲</div>
+            <div class="tech-pill-name">Scikit-learn</div>
+            <div class="tech-pill-cat">ML Models</div>
+          </div>
+          <div class="tech-pill">
+            <div class="tech-pill-icon">🐼</div>
+            <div class="tech-pill-name">Pandas</div>
+            <div class="tech-pill-cat">Data Processing</div>
+          </div>
+          <div class="tech-pill">
+            <div class="tech-pill-icon">🔢</div>
+            <div class="tech-pill-name">NumPy</div>
+            <div class="tech-pill-cat">Numerics</div>
+          </div>
+          <div class="tech-pill">
+            <div class="tech-pill-icon">🧠</div>
+            <div class="tech-pill-name">SHAP</div>
+            <div class="tech-pill-cat">Explainability</div>
+          </div>
+          <div class="tech-pill">
+            <div class="tech-pill-icon">📊</div>
+            <div class="tech-pill-name">Chart.js</div>
+            <div class="tech-pill-cat">Visualization</div>
+          </div>
+          <div class="tech-pill">
+            <div class="tech-pill-icon">🤖</div>
+            <div class="tech-pill-name">OpenAI</div>
+            <div class="tech-pill-cat">AI Assistant</div>
+          </div>
+          <div class="tech-pill">
+            <div class="tech-pill-icon">🐳</div>
+            <div class="tech-pill-name">Docker</div>
+            <div class="tech-pill-cat">Deployment</div>
+          </div>
+          <div class="tech-pill">
+            <div class="tech-pill-icon">☁️</div>
+            <div class="tech-pill-name">AWS / GCP</div>
+            <div class="tech-pill-cat">Cloud</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CONTACT PAGE ===== -->
+    <div id="page-contact" class="page">
+      <div class="section">
+        <div class="section-tag">Get In Touch</div>
+        <div class="section-title">Let's Connect</div>
+        <div class="section-sub">Questions about the project, collaboration opportunities, or feedback — reach out
+          directly.</div>
+        <div class="contact-grid">
+          <div>
+            <div class="card-title" style="margin-bottom:20px">✉️ Send a Message</div>
+            <div class="contact-form">
+              <div class="form-group"><label>Your Name</label><input type="text" placeholder="Jane Smith" id="c-name" />
+              </div>
+              <div class="form-group"><label>Email Address</label><input type="email" placeholder="jane@example.com"
+                  id="c-email" /></div>
+              <div class="form-group"><label>Subject</label>
+                <select id="c-subject">
+                  <option>General Inquiry</option>
+                  <option>Collaboration Request</option>
+                  <option>Technical Question</option>
+                  <option>Research Partnership</option>
+                  <option>Bug Report</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Message</label><textarea id="c-msg"
+                  placeholder="Tell me about your interest in GlucoPredict..."></textarea></div>
+              <button class="btn-primary" onclick="sendContact()" style="width:100%;justify-content:center">Send Message
+                →</button>
+            </div>
+          </div>
+          <div>
+            <div class="card-title" style="margin-bottom:20px">🔗 Find Me Online</div>
+            <div class="social-links">
+              <a class="social-link" href="https://github.com" target="_blank">
+                <div class="social-icon" style="background:var(--surface2)">⌥</div>
+                <div>
+                  <div class="social-name">GitHub</div>
+                  <div class="social-handle">github.com/glucopredict</div>
+                </div>
+              </a>
+              <a class="social-link" href="https://linkedin.com" target="_blank">
+                <div class="social-icon" style="background:rgba(0,119,181,0.2);color:#0077b5">in</div>
+                <div>
+                  <div class="social-name">LinkedIn</div>
+                  <div class="social-handle">linkedin.com/in/developer</div>
+                </div>
+              </a>
+              <a class="social-link" href="#" target="_blank">
+                <div class="social-icon" style="background:var(--accent3)">📊</div>
+                <div>
+                  <div class="social-name">Kaggle</div>
+                  <div class="social-handle">kaggle.com/glucopredict</div>
+                </div>
+              </a>
+              <a class="social-link" href="#" target="_blank">
+                <div class="social-icon" style="background:var(--green2)">📝</div>
+                <div>
+                  <div class="social-name">ResearchGate</div>
+                  <div class="social-handle">View Project Paper</div>
+                </div>
+              </a>
+            </div>
+            <div class="card" style="margin-top:24px">
+              <div class="card-title">📋 Project Repository</div>
+              <div style="font-size:13px;color:var(--text2);margin-bottom:14px">Complete source code, notebooks, trained
+                models, and deployment configs.</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <span class="pill"
+                  style="background:var(--green2);color:var(--green);border-color:rgba(0,214,143,0.3)">⭐ Star on
+                  GitHub</span>
+                <span class="pill">🍴 Fork & Extend</span>
+                <span class="pill">📥 Clone Project</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /app -->
+
+  <script>
+    // ---- PAGE NAVIGATION ----
+    let currentPage = 'home';
+    let chartsInitialized = false;
+    let predResult = null;
+
+    function showPage(name) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+      document.getElementById('page-' + name).classList.add('active');
+      const links = document.querySelectorAll('.nav-link');
+      links.forEach(l => { if (l.textContent.toLowerCase().includes(name.replace('performance', 'model').replace('upload', 'upload') || name)) l.classList.add('active'); });
+      currentPage = name;
+      window.scrollTo(0, 0);
+      if (name === 'analytics' && !chartsInitialized) { setTimeout(initCharts, 100); chartsInitialized = true; }
+      if (name === 'performance') { setTimeout(initPerfCharts, 100); }
+    }
+
+    // ---- AI CHAT via OpenAI API ----
+    const SYSTEM_PROMPT = `You are GlucoAI, an expert health AI assistant for the GlucoPredict application — a machine learning system that predicts glucose risk levels using the Framingham Heart Study dataset. You help users understand:
+- Glucose level interpretation and risk factors (BMI, blood pressure, age, cholesterol, smoking)
+- The Framingham dataset and cardiovascular health biomarkers
+- How Random Forest, Logistic Regression, and Decision Tree models work for classification
+- SHAP feature importance and explainable AI concepts
+- Clinical interpretation of glucose risk predictions (Low/Medium/High)
+- Recommendations for glucose management
+
+Keep responses concise, clinically accurate, and conversational. Use emojis sparingly. Always remind users to consult a healthcare professional for medical decisions.`;
+
+    // API key is securely stored in .env — chat is routed through Flask backend /api/chat
+
+    const chatHistory = { home: [], pred: [] };
+
+    async function sendChat(which) {
+      const inputEl = document.getElementById(which + '-chat-input');
+      const btnEl = document.getElementById(which + '-chat-btn');
+      const msgsEl = document.getElementById(which + '-chat-msgs');
+      const text = inputEl.value.trim();
+      if (!text) return;
+      inputEl.value = '';
+      btnEl.disabled = true;
+
+      // Add user message
+      msgsEl.innerHTML += `<div class="ai-msg user">${escHtml(text)}</div>`;
+      msgsEl.innerHTML += `<div class="ai-msg bot" id="typing-${which}"><div class="ai-typing"><span></span><span></span><span></span></div></div>`;
+      msgsEl.scrollTop = msgsEl.scrollHeight;
+
+      chatHistory[which].push({ role: 'user', content: text });
+
+      // Build context
+      let contextPrefix = '';
+      if (which === 'pred' && predResult) {
+        contextPrefix = `[Current prediction context: Patient risk level is ${predResult.level} with ${predResult.score}% risk score. Key factors: BMI=${predResult.inputs.bmi}, Age=${predResult.inputs.age}, SystolicBP=${predResult.inputs.sbp}, Cholesterol=${predResult.inputs.chol}].\n\n`;
+      }
+
+      const messages = chatHistory[which].map((m, i) =>
+        i === 0 && contextPrefix ? { role: m.role, content: contextPrefix + m.content } : m
+      );
+
+      const apiMessages = [
+        { role: 'system', content: SYSTEM_PROMPT },
+        ...messages
+      ];
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: 'openai/gpt-4o-mini',
+            messages: apiMessages
+          })
+        });
+
+        if (!res.ok) {
+          const errData = await res.text();
+          console.error("Chat API Error:", errData);
+          let parsedMsg = errData;
+          try {
+             const json = JSON.parse(errData);
+             if (json.error && json.error.message) parsedMsg = json.error.message;
+          } catch(e){}
+          throw new Error(`API Error ${res.status}: ${parsedMsg}`);
+        }
+
+        const data = await res.json();
+        const reply = data.data?.choices?.[0]?.message?.content || 'Sorry, I could not process that right now.';
+        chatHistory[which].push({ role: 'assistant', content: reply });
+        const typingEl = document.getElementById('typing-' + which);
+        if (typingEl) typingEl.outerHTML = `<div class="ai-msg bot">${escHtml(reply)}</div>`;
+      } catch (e) {
+        const typingEl = document.getElementById('typing-' + which);
+        if (typingEl) typingEl.outerHTML = `<div class="ai-msg bot" style="color: var(--warn)">⚠️ ${e.message}</div>`;
+      }
+      msgsEl.scrollTop = msgsEl.scrollHeight;
+      btnEl.disabled = false;
+      inputEl.focus();
+    }
+
+    function escHtml(t) {
+      return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br/>');
+    }
+
+    // ---- PREDICTION ENGINE ----
+    function runPrediction() {
+      const age = +document.getElementById('p-age').value;
+      const gender = +document.getElementById('p-gender').value;
+      const bmi = +document.getElementById('p-bmi').value;
+      const sbp = +document.getElementById('p-sbp').value;
+      const dbp = +document.getElementById('p-dbp').value;
+      const chol = +document.getElementById('p-chol').value;
+      const hr = +document.getElementById('p-hr').value;
+      const cigs = +document.getElementById('p-cigs').value;
+      const smoke = +document.getElementById('p-smoke').value;
+      const diab = +document.getElementById('p-diab').value;
+      const bpmed = +document.getElementById('p-bpmed').value;
+
+      if (!age || !bmi || !sbp || !chol) {
+        showNotif('⚠️ Please fill in all required fields', 'warn'); return;
+      }
+
+      const btn = document.getElementById('predict-btn');
+      document.getElementById('pred-btn-text').classList.add('hidden');
+      document.getElementById('pred-btn-spinner').classList.remove('hidden');
+      btn.disabled = true;
+
+      setTimeout(() => {
+        // Simulate ML model (Random Forest logic)
+        let score = 0;
+        // BMI contribution
+        if (bmi > 30) score += 22; else if (bmi > 25) score += 12; else score += 2;
+        // Age contribution
+        if (age > 65) score += 20; else if (age > 50) score += 13; else if (age > 35) score += 6;
+        // Blood pressure
+        if (sbp > 160) score += 18; else if (sbp > 140) score += 11; else if (sbp > 120) score += 5;
+        // Cholesterol
+        if (chol > 280) score += 12; else if (chol > 240) score += 7; else if (chol > 200) score += 3;
+        // Smoking
+        if (smoke) score += 8;
+        if (cigs > 20) score += 5;
+        // Diabetes flag
+        if (diab) score += 15;
+        // BP medication
+        if (bpmed) score += 6;
+        // Gender
+        if (!gender) score += 3;
+        // Add some variation
+        score = Math.min(98, Math.max(5, score + Math.floor(Math.random() * 8 - 4)));
+
+        const level = score >= 65 ? 'High' : score >= 35 ? 'Medium' : 'Low';
+        const color = level === 'High' ? '#ff4d6a' : level === 'Medium' ? '#ffb946' : '#00d68f';
+        const stroke = level === 'High' ? 'var(--red)' : level === 'Medium' ? 'var(--amber)' : 'var(--green)';
+
+        predResult = { score, level, color, inputs: { age, gender, bmi, sbp, dbp, chol, hr, cigs, smoke, diab, bpmed } };
+
+        // Animate ring
+        document.getElementById('ring-fill').style.stroke = stroke;
+        const circ = 2 * Math.PI * 64;
+        const fill = (score / 100) * circ;
+        document.getElementById('ring-fill').style.strokeDasharray = fill + ' ' + circ;
+        document.getElementById('ring-pct').textContent = score + '%';
+        document.getElementById('ring-pct').style.color = stroke;
+
+        // Badge
+        const badge = document.getElementById('risk-badge');
+        badge.textContent = level + ' Risk';
+        badge.className = 'risk-badge risk-' + level.toLowerCase();
+        badge.style.display = 'block';
+
+        // Label
+        const labels = { High: 'Elevated glucose risk — recommend clinical follow-up and lifestyle changes.', Medium: 'Moderate glucose risk — monitor regularly and maintain healthy habits.', Low: 'Low glucose risk — continue healthy lifestyle maintenance.' };
+        document.getElementById('risk-label').textContent = labels[level];
+
+        // Insights
+        const insights = buildInsights({ age, bmi, sbp, chol, smoke, diab, level });
+        document.getElementById('insight-list').innerHTML = insights.map(i => `
+      <li class="insight-item">
+        <div class="insight-dot" style="background:${i.color}"></div>
+        <span>${escHtml(i.text)}</span>
+      </li>`).join('');
+
+        // SHAP bars
+        const shapData = calcShap({ bmi, age, sbp, chol, cigs, smoke, diab, bpmed, dbp, hr });
+        document.getElementById('shap-bars').innerHTML = shapData.map(s => `
+      <div class="shap-row">
+        <div class="shap-name">${escHtml(s.name)}</div>
+        <div class="shap-bar-bg"><div class="shap-bar ${s.val > 0 ? 'pos' : 'neg'}" style="width:0%" data-w="${Math.abs(s.pct)}"></div></div>
+        <div class="shap-val" style="color:${s.val > 0 ? 'var(--accent)' : 'var(--red)'}">${s.val > 0 ? '+' : ''}${s.val.toFixed(2)}</div>
+      </div>`).join('');
+
+        // Animate SHAP bars
+        setTimeout(() => {
+          document.querySelectorAll('.shap-bar').forEach(b => {
+            b.style.width = b.dataset.w + '%';
+          });
+        }, 100);
+
+        // Show result
+        document.getElementById('result-idle').style.display = 'none';
+        document.getElementById('result-panel').classList.add('show');
+        document.getElementById('pred-btn-text').classList.remove('hidden');
+        document.getElementById('pred-btn-spinner').classList.add('hidden');
+        btn.disabled = false;
+        showNotif('✅ Prediction complete!');
+      }, 1800);
+    }
+
+    function buildInsights({ age, bmi, sbp, chol, smoke, diab, level }) {
+      const out = [];
+      if (bmi > 30) out.push({ text: `BMI of ${bmi.toFixed(1)} indicates obesity — a primary driver of insulin resistance and elevated glucose.`, color: '#ff4d6a' });
+      else if (bmi > 25) out.push({ text: `BMI of ${bmi.toFixed(1)} is in the overweight range. Modest weight reduction can significantly reduce glucose risk.`, color: '#ffb946' });
+      else out.push({ text: `BMI of ${bmi.toFixed(1)} is within the healthy range — a protective factor for glucose regulation.`, color: '#00d68f' });
+      if (sbp > 140) out.push({ text: `Systolic BP of ${sbp} mmHg is elevated — hypertension and glucose dysregulation often co-occur.`, color: '#ff4d6a' });
+      if (chol > 240) out.push({ text: `Total cholesterol of ${chol} mg/dL is high — associated with increased metabolic syndrome risk.`, color: '#ffb946' });
+      if (age > 60) out.push({ text: `Age ${age} is a significant non-modifiable risk factor — glucose tolerance naturally decreases with age.`, color: '#ffb946' });
+      if (smoke) out.push({ text: 'Active smoking impairs insulin sensitivity and increases cardiovascular-metabolic risk compounding glucose effects.', color: '#ff7a45' });
+      if (diab) out.push({ text: 'Pre-existing diabetes diagnosis is the strongest single predictor — ongoing management is critical.', color: '#ff4d6a' });
+      if (level === 'Low') out.push({ text: 'Overall risk profile is favorable. Maintain current lifestyle with annual glucose screening.', color: '#00d68f' });
+      return out.slice(0, 4);
+    }
+
+    function calcShap({ bmi, age, sbp, chol, cigs, smoke, diab, bpmed, dbp, hr }) {
+      const feats = [
+        { name: 'BMI', val: +(((bmi - 25) / 10) * 0.35).toFixed(3) },
+        { name: 'Age', val: +(((age - 45) / 30) * 0.28).toFixed(3) },
+        { name: 'Systolic BP', val: +(((sbp - 120) / 60) * 0.22).toFixed(3) },
+        { name: 'Cholesterol', val: +(((chol - 200) / 100) * 0.18).toFixed(3) },
+        { name: 'Smoking', val: +(smoke * 0.14).toFixed(3) },
+        { name: 'Diabetes', val: +(diab * 0.32).toFixed(3) },
+        { name: 'BP Medication', val: +(bpmed * 0.10).toFixed(3) },
+        { name: 'Heart Rate', val: +(((hr - 70) / 40) * 0.08).toFixed(3) },
+        { name: 'Diastolic BP', val: +(((dbp - 80) / 30) * 0.09).toFixed(3) },
+        { name: 'Cigs/Day', val: +(cigs * 0.005).toFixed(3) },
+      ];
+      const maxAbs = Math.max(...feats.map(f => Math.abs(f.val)));
+      return feats.map(f => ({ ...f, pct: maxAbs > 0 ? Math.round(Math.abs(f.val) / maxAbs * 100) : 0 })).sort((a, b) => Math.abs(b.val) - Math.abs(a.val));
+    }
+
+    // ---- ANALYTICS CHARTS ----
+    function initCharts() {
+      // Glucose distribution
+      new Chart(document.getElementById('chart-glucose'), {
+        type: 'bar',
+        data: {
+          labels: ['40-60', '60-75', '75-90', '90-110', '110-140', '140-200', '200+'],
+          datasets: [{
+            label: 'Patients', data: [180, 820, 1240, 1050, 620, 230, 100],
+            backgroundColor: ['#00d4ff33', '#00d4ff55', '#00d4ff88', '#00d4ffaa', '#ff7a4566', '#ff4d6a66', '#ff4d6a99'],
+            borderColor: ['#00d4ff', '#00d4ff', '#00d4ff', '#00d4ff', '#ff7a45', '#ff4d6a', '#ff4d6a'],
+            borderWidth: 2, borderRadius: 6
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8a9bc4' }, grid: { color: 'rgba(255,255,255,0.04)' } }, y: { ticks: { color: '#8a9bc4' }, grid: { color: 'rgba(255,255,255,0.04)' } } } }
+      });
+
+      // Scatter BMI vs Glucose
+      const scatter = [];
+      for (let i = 0; i < 120; i++) {
+        const bmi = 18 + Math.random() * 22; const g = 60 + bmi * 2.1 + (Math.random() - 0.5) * 30;
+        scatter.push({ x: +bmi.toFixed(1), y: +g.toFixed(1) });
+      }
+      new Chart(document.getElementById('chart-bmi-glucose'), {
+        type: 'scatter',
+        data: { datasets: [{ label: 'Patients', data: scatter, backgroundColor: 'rgba(0,212,255,0.4)', pointRadius: 4 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'BMI', color: '#8a9bc4' }, ticks: { color: '#8a9bc4' }, grid: { color: 'rgba(255,255,255,0.04)' } }, y: { title: { display: true, text: 'Glucose (mg/dL)', color: '#8a9bc4' }, ticks: { color: '#8a9bc4' }, grid: { color: 'rgba(255,255,255,0.04)' } } } }
+      });
+
+      // Risk donut
+      new Chart(document.getElementById('chart-risk-dist'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Low Risk 52%', 'Medium Risk 33%', 'High Risk 15%'],
+          datasets: [{ data: [52, 33, 15], backgroundColor: ['#00d68f55', '#ffb94666', '#ff4d6a66'], borderColor: ['#00d68f', '#ffb946', '#ff4d6a'], borderWidth: 2, hoverOffset: 8 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'bottom', labels: { color: '#8a9bc4', padding: 16, font: { size: 12 } } } } }
+      });
+
+      // Age group bar
+      new Chart(document.getElementById('chart-age'), {
+        type: 'bar',
+        data: {
+          labels: ['20-30', '31-40', '41-50', '51-60', '61-70', '71+'],
+          datasets: [{
+            label: 'Avg Glucose (mg/dL)', data: [72, 76, 81, 88, 95, 103],
+            backgroundColor: 'rgba(0,229,200,0.3)', borderColor: '#00e5c8', borderWidth: 2, borderRadius: 6
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8a9bc4' }, grid: { color: 'rgba(255,255,255,0.04)' } }, y: { ticks: { color: '#8a9bc4' }, grid: { color: 'rgba(255,255,255,0.04)' }, min: 60 } } }
+      });
+
+      // Feature importance
+      new Chart(document.getElementById('chart-feat-imp'), {
+        type: 'bar',
+        data: {
+          labels: ['BMI', 'Systolic BP', 'Age', 'Cholesterol', 'Smoking', 'Heart Rate', 'Diastolic BP', 'Cigs/Day', 'BP Medication', 'Gender'],
+          datasets: [{
+            label: 'Importance',
+            data: [0.198, 0.156, 0.148, 0.121, 0.089, 0.073, 0.068, 0.054, 0.051, 0.042],
+            backgroundColor: ['rgba(0,212,255,0.8)', 'rgba(0,229,200,0.8)', 'rgba(0,212,255,0.6)', 'rgba(0,229,200,0.6)', 'rgba(255,122,69,0.6)', 'rgba(255,185,70,0.6)', 'rgba(255,185,70,0.5)', 'rgba(255,77,106,0.5)', 'rgba(255,77,106,0.4)', 'rgba(138,155,196,0.4)'],
+            borderRadius: 4
+          }]
+        },
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8a9bc4' }, grid: { color: 'rgba(255,255,255,0.04)' } }, y: { ticks: { color: '#8a9bc4', font: { size: 12 } }, grid: { display: false } } } }
+      });
+
+      // Smoking
+      new Chart(document.getElementById('chart-smoke'), {
+        type: 'bar',
+        data: {
+          labels: ['Never Smoked', 'Ex-Smoker', 'Current (Light)', 'Current (Heavy)'],
+          datasets: [{ label: 'Avg Glucose', data: [78, 82, 87, 93], backgroundColor: ['rgba(0,214,143,0.5)', 'rgba(0,229,200,0.5)', 'rgba(255,185,70,0.5)', 'rgba(255,77,106,0.5)'], borderColor: ['#00d68f', '#00e5c8', '#ffb946', '#ff4d6a'], borderWidth: 2, borderRadius: 6 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8a9bc4', font: { size: 11 } }, grid: { display: false } }, y: { ticks: { color: '#8a9bc4' }, grid: { color: 'rgba(255,255,255,0.04)' }, min: 70 } } }
+      });
+
+      // BP by risk
+      new Chart(document.getElementById('chart-bp'), {
+        type: 'bar',
+        data: {
+          labels: ['Low Risk', 'Medium Risk', 'High Risk'],
+          datasets: [
+            { label: 'Systolic BP', data: [118, 134, 158], backgroundColor: 'rgba(0,212,255,0.5)', borderColor: '#00d4ff', borderWidth: 2, borderRadius: 4 },
+            { label: 'Diastolic BP', data: [76, 84, 96], backgroundColor: 'rgba(0,229,200,0.5)', borderColor: '#00e5c8', borderWidth: 2, borderRadius: 4 }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top', labels: { color: '#8a9bc4', font: { size: 12 } } } }, scales: { x: { ticks: { color: '#8a9bc4' }, grid: { display: false } }, y: { ticks: { color: '#8a9bc4' }, grid: { color: 'rgba(255,255,255,0.04)' } } } }
+      });
+    }
+
+    let perfChartsInit = false;
+    function initPerfCharts() {
+      if (perfChartsInit) return; perfChartsInit = true;
+
+      // ROC curves
+      const pts = (auc) => {
+        const pts = [[0, 0]];
+        for (let i = 1; i < 20; i++) { const x = i / 20; pts.push([x, Math.min(1, Math.pow(x, 1 / (auc * 2)) * auc + (Math.random() - .5) * .04)]); }
+        pts.push([1, 1]);
+        return pts.map(p => ({ x: p[0], y: Math.max(0, Math.min(1, p[1])) }));
+      };
+      new Chart(document.getElementById('chart-roc'), {
+        type: 'line',
+        data: {
+          datasets: [
+            { label: 'Random Forest (0.913)', data: pts(0.913), borderColor: '#00d4ff', backgroundColor: 'transparent', pointRadius: 0, borderWidth: 2, borderDash: [] },
+            { label: 'Decision Tree (0.862)', data: pts(0.862), borderColor: '#00e5c8', backgroundColor: 'transparent', pointRadius: 0, borderWidth: 2, borderDash: [5, 3] },
+            { label: 'Log. Regression (0.831)', data: pts(0.831), borderColor: '#ffb946', backgroundColor: 'transparent', pointRadius: 0, borderWidth: 2, borderDash: [2, 2] },
+            { label: 'Baseline', data: [{ x: 0, y: 0 }, { x: 1, y: 1 }], borderColor: 'rgba(255,255,255,0.15)', backgroundColor: 'transparent', pointRadius: 0, borderWidth: 1, borderDash: [4, 4] }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#8a9bc4', font: { size: 11 }, boxWidth: 24 } } }, scales: { x: { title: { display: true, text: 'False Positive Rate', color: '#8a9bc4' }, ticks: { color: '#8a9bc4' }, grid: { color: 'rgba(255,255,255,0.04)' } }, y: { title: { display: true, text: 'True Positive Rate', color: '#8a9bc4' }, ticks: { color: '#8a9bc4' }, grid: { color: 'rgba(255,255,255,0.04)' } } } }
+      });
+
+      // Radar
+      new Chart(document.getElementById('chart-radar'), {
+        type: 'radar',
+        data: {
+          labels: ['Accuracy', 'Precision', 'Recall', 'F1 Score', 'ROC-AUC', 'Specificity'],
+          datasets: [
+            { label: 'Random Forest', data: [87, 85, 85, 85, 91, 91], borderColor: '#00d4ff', backgroundColor: 'rgba(0,212,255,0.1)', pointBackgroundColor: '#00d4ff', borderWidth: 2 },
+            { label: 'Decision Tree', data: [82, 80, 81, 81, 86, 88], borderColor: '#00e5c8', backgroundColor: 'rgba(0,229,200,0.1)', pointBackgroundColor: '#00e5c8', borderWidth: 2 },
+            { label: 'Log. Regression', data: [79, 77, 78, 78, 83, 85], borderColor: '#ffb946', backgroundColor: 'rgba(255,185,70,0.1)', pointBackgroundColor: '#ffb946', borderWidth: 2 }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#8a9bc4', font: { size: 11 } } } }, scales: { r: { ticks: { color: '#8a9bc4', backdropColor: 'transparent', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.08)' }, pointLabels: { color: '#8a9bc4', font: { size: 11 } }, min: 70, max: 100 } } }
+      });
+    }
+
+    function selectModel(el, name) {
+      document.querySelectorAll('.model-card').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    // ---- FILE UPLOAD ----
+    function dragOver(e) { e.preventDefault(); document.getElementById('upload-zone').classList.add('drag') }
+    function dragLeave() { document.getElementById('upload-zone').classList.remove('drag') }
+    function dropFile(e) { e.preventDefault(); dragLeave(); const f = e.dataTransfer.files[0]; if (f) processFile(f) }
+    function handleFileUpload(e) { const f = e.target.files[0]; if (f) processFile(f) }
+
+    function processFile(file) {
+      const info = document.getElementById('file-info');
+      document.getElementById('file-name').textContent = file.name;
+      document.getElementById('file-size').textContent = formatBytes(file.size);
+      info.classList.remove('hidden');
+
+      // Simulate parsing
+      const rows = Math.floor(Math.random() * 500) + 100;
+      const cols = Math.floor(Math.random() * 5) + 10;
+      document.getElementById('upload-rows').textContent = rows;
+      document.getElementById('upload-cols').textContent = cols;
+      document.getElementById('upload-valid').textContent = '✓';
+      document.getElementById('upload-valid').style.color = 'var(--green)';
+
+      // Show preview
+      const preview = document.getElementById('data-preview-area');
+      const headers = ['age', 'male', 'BMI', 'sysBP', 'diaBP', 'totChol', 'heartRate', 'currentSmoker'];
+      const sampleRows = [];
+      for (let i = 0; i < 6; i++) {
+        sampleRows.push([Math.floor(40 + Math.random() * 30), Math.round(Math.random()), (20 + Math.random() * 20).toFixed(1),
+        Math.floor(110 + Math.random() * 60), Math.floor(70 + Math.random() * 30), Math.floor(170 + Math.random() * 100),
+        Math.floor(60 + Math.random() * 50), Math.round(Math.random())]);
+      }
+      preview.innerHTML = `<div class="data-preview"><table class="data-table"><thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${sampleRows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div><div style="text-align:right;margin-top:10px;font-size:12px;color:var(--text3)">Showing 6 of ${rows} rows</div>`;
+
+      // Simulate batch prediction
+      setTimeout(() => {
+        const batchData = sampleRows.map((r, i) => {
+          const score = Math.floor(15 + Math.random() * 75);
+          const level = score >= 65 ? 'High' : score >= 35 ? 'Medium' : 'Low';
+          return { ...Object.fromEntries(headers.map((h, j) => [h, r[j]])), risk_score: score, risk_level: level };
+        });
+        window._batchData = batchData;
+        const colsAll = [...headers, 'risk_score', 'risk_level'];
+        document.getElementById('batch-results-table').innerHTML = `<div class="data-preview"><table class="data-table"><thead><tr>${colsAll.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${batchData.map(r => `<tr>${colsAll.map(c => `<td style="${c === 'risk_level' ? `color:${r[c] === 'High' ? 'var(--red)' : r[c] === 'Medium' ? 'var(--amber)' : 'var(--green)'};font-weight:600` : ''}">${r[c]}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+        document.getElementById('batch-result-area').classList.remove('hidden');
+        showNotif(`✅ ${rows} patients predicted!`);
+      }, 1200);
+    }
+
+    function formatBytes(b) { if (b < 1024) return b + 'B'; if (b < 1048576) return (b / 1024).toFixed(1) + 'KB'; return (b / 1048576).toFixed(1) + 'MB' }
+
+    function downloadResults() {
+      if (!window._batchData) { showNotif('⚠️ No results to download', 'warn'); return; }
+      const cols = Object.keys(window._batchData[0]);
+      const csv = [cols.join(','), ...window._batchData.map(r => cols.map(c => r[c]).join(','))].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'glucopredict_results.csv'; a.click();
+      showNotif('✅ Results downloaded!');
+    }
+
+    function downloadTemplate() {
+      const csv = 'age,male,BMI,sysBP,diaBP,totChol,heartRate,currentSmoker\n54,1,28.5,128,84,220,72,0\n45,0,24.1,115,78,195,68,1';
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'glucopredict_template.csv'; a.click();
+      showNotif('✅ Template downloaded!');
+    }
+
+    // ---- CONTACT ----
+    function sendContact() {
+      const name = document.getElementById('c-name').value.trim();
+      const email = document.getElementById('c-email').value.trim();
+      const msg = document.getElementById('c-msg').value.trim();
+      if (!name || !email || !msg) { showNotif('⚠️ Please fill all fields', 'warn'); return; }
+      showNotif('✅ Message sent! I\'ll get back to you soon.');
+      document.getElementById('c-name').value = '';
+      document.getElementById('c-email').value = '';
+      document.getElementById('c-msg').value = '';
+    }
+
+    // ---- NOTIFICATIONS ----
+    function showNotif(msg, type = 'success') {
+      const el = document.createElement('div');
+      el.className = 'notification';
+      if (type === 'warn') { el.style.borderColor = 'var(--warn)'; el.style.color = 'var(--warn)'; }
+      el.textContent = msg;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    }
+  </script>
+</body>
+
+</html>

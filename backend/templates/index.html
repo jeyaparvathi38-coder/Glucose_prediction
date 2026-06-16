@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GlucoPredict — AI Glucose Level Prediction</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+
+  <div id="app">
+    <!-- NAV -->
+    <nav>
+      <div class="nav-logo" onclick="showPage('home')">
+        <div class="logo-icon">🩸</div>
+        GlucoPredict
+      </div>
+      <div class="nav-links">
+        <button class="nav-link active" onclick="showPage('home')">Home</button>
+        <button class="nav-link" onclick="showPage('predict')">Predict</button>
+        <button class="nav-link" onclick="showPage('analytics')">Analytics</button>
+        <button class="nav-link" onclick="showPage('performance')">Model</button>
+        <button class="nav-link" onclick="showPage('upload')">Upload Data</button>
+        <button class="nav-link" onclick="showPage('about')">About</button>
+        <button class="nav-link" onclick="showPage('contact')">Contact</button>
+      </div>
+      <button class="nav-cta" onclick="showPage('predict')">Try Prediction →</button>
+    </nav>
+
+    <!-- ===== HOME PAGE ===== -->
+    <div id="page-home" class="page active">
+      <div class="hero">
+        <div class="hero-content">
+          <div class="badge">
+            <span class="badge-dot"></span>
+            Framingham Heart Study · ML-Powered
+          </div>
+          <h1>Predict Glucose<br />Levels with <span>AI Precision</span></h1>
+          <p>Advanced machine learning models trained on the Framingham Heart Study dataset to predict glucose risk
+            levels — with explainable AI insights and clinical-grade accuracy.</p>
+          <div class="hero-btns">
+            <button class="btn-primary" onclick="showPage('predict')">
+              🔬 Start Prediction
+            </button>
+            <button class="btn-secondary" onclick="showPage('analytics')">
+              View Analytics →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-strip">
+        <div class="stat-cell">
+          <div class="stat-num">4,240</div>
+          <div class="stat-label">Patient Records</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-num">87.3%</div>
+          <div class="stat-label">Model Accuracy</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-num">0.91</div>
+          <div class="stat-label">ROC-AUC Score</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-num">3</div>
+          <div class="stat-label">ML Models Trained</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-tag">Why GlucoPredict</div>
+        <div class="section-title">Every feature built for<br />clinical intelligence</div>
+        <div class="section-sub">From raw health data to actionable insights — in seconds.</div>
+        <div class="feature-grid">
+          <div class="feature-card">
+            <div class="feature-icon" style="background:var(--accent3)">🤖</div>
+            <h3>Ensemble ML Models</h3>
+            <p>Random Forest, Logistic Regression, and Decision Tree — all trained on the Framingham cohort with
+              cross-validation and hyperparameter tuning.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon" style="background:var(--teal2)">🧠</div>
+            <h3>Explainable AI</h3>
+            <p>SHAP-based feature importance visualizations show exactly which health factors drive each prediction —
+              building trust in the model's decisions.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon" style="background:var(--green2)">📊</div>
+            <h3>Rich Analytics Dashboard</h3>
+            <p>Interactive charts for feature distributions, correlation heatmaps, trend analysis, and comparative model
+              performance metrics.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon" style="background:var(--warn2)">📁</div>
+            <h3>Batch CSV Upload</h3>
+            <p>Upload your own CSV or Excel dataset for bulk predictions with automatic validation, error handling, and
+              downloadable results.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon" style="background:var(--red2)">🎯</div>
+            <h3>Risk Stratification</h3>
+            <p>Patients are categorized into Low, Medium, and High glucose risk tiers with personalized clinical
+              recommendations for each outcome.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon" style="background:rgba(123,79,255,0.12)">💬</div>
+            <h3>AI Health Assistant</h3>
+            <p>Ask questions about predictions, dataset patterns, or medical context — powered by OpenAI for natural,
+              insightful health conversations.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Chat section on home -->
+      <div class="section" style="padding-top:0">
+        <div class="section-tag">AI Assistant</div>
+        <div class="section-title">Ask anything about<br />your health data</div>
+        <div class="section-sub" style="margin-bottom:32px">Powered by OpenAI — get instant answers about glucose, the
+          Framingham dataset, or your predictions.</div>
+        <div class="ai-chat">
+          <div class="ai-chat-header">
+            <div class="ai-chat-dot"></div>
+            <span style="font-size:14px;font-weight:600">GlucoAI Assistant</span>
+            <span style="font-size:12px;color:var(--text3);margin-left:auto">Powered by OpenAI</span>
+          </div>
+          <div class="ai-messages" id="home-chat-msgs">
+            <div class="ai-msg bot">👋 Hello! I'm GlucoAI — your glucose health intelligence assistant. Ask me about the
+              Framingham dataset, glucose risk factors, how the ML models work, or what your results mean.</div>
+          </div>
+          <div class="ai-input-row">
+            <input class="ai-input" id="home-chat-input" placeholder="e.g. What factors most influence glucose levels?"
+              onkeydown="if(event.key==='Enter')sendChat('home')" />
+            <button class="ai-send" id="home-chat-btn" onclick="sendChat('home')">Ask →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PREDICTION PAGE ===== -->
+    <div id="page-predict" class="page">
+      <div class="section">
+        <div class="section-tag">AI Prediction Engine</div>
+        <div class="section-title">Glucose Risk Predictor</div>
+        <div class="section-sub">Enter patient vitals and health markers. The ensemble model will predict glucose risk
+          level with SHAP-based explanations.</div>
+        <div class="pred-layout">
+          <!-- Input Form -->
+          <div class="card">
+            <div class="card-title">🔬 Patient Health Parameters</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Age (years)</label>
+                <input type="number" id="p-age" placeholder="e.g. 54" min="20" max="90" value="54" />
+              </div>
+              <div class="form-group">
+                <label>Gender</label>
+                <select id="p-gender">
+                  <option value="1">Male</option>
+                  <option value="0">Female</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>BMI</label>
+                <input type="number" id="p-bmi" placeholder="e.g. 28.5" min="15" max="50" step="0.1" value="28.5" />
+                <span class="form-hint">kg/m²</span>
+              </div>
+              <div class="form-group">
+                <label>Systolic BP</label>
+                <input type="number" id="p-sbp" placeholder="e.g. 128" min="80" max="220" value="128" />
+                <span class="form-hint">mmHg</span>
+              </div>
+              <div class="form-group">
+                <label>Diastolic BP</label>
+                <input type="number" id="p-dbp" placeholder="e.g. 84" min="50" max="140" value="84" />
+                <span class="form-hint">mmHg</span>
+              </div>
+              <div class="form-group">
+                <label>Total Cholesterol</label>
+                <input type="number" id="p-chol" placeholder="e.g. 220" min="100" max="400" value="220" />
+                <span class="form-hint">mg/dL</span>
+              </div>
+              <div class="form-group">
+                <label>Heart Rate</label>
+                <input type="number" id="p-hr" placeholder="e.g. 72" min="40" max="150" value="72" />
+                <span class="form-hint">bpm</span>
+              </div>
+              <div class="form-group">
+                <label>Cigarettes/Day</label>
+                <input type="number" id="p-cigs" placeholder="e.g. 0" min="0" max="70" value="0" />
+              </div>
+              <div class="form-group">
+                <label>Currently Smoking</label>
+                <select id="p-smoke">
+                  <option value="0">No</option>
+                  <option value="1">Yes</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Diabetes</label>
+                <select id="p-diab">
+                  <option value="0">No</option>
+                  <option value="1">Yes</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>BP Medication</label>
+                <select id="p-bpmed">
+                  <option value="0">No</option>
+                  <option value="1">Yes</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Prevalent Stroke</label>
+                <select id="p-stroke">
+                  <option value="0">No</option>
+                  <option value="1">Yes</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-top:20px">
+              <button class="predict-btn" id="predict-btn" onclick="runPrediction()">
+                <span id="pred-btn-text">🔮 Predict Glucose Risk</span>
+                <span id="pred-btn-spinner" class="hidden"><span class="spinner"
+                    style="border-color:rgba(0,0,0,.3);border-top-color:#000"></span></span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Result Panel -->
+          <div id="result-area">
+            <div class="result-idle" id="result-idle">
+              <div class="result-idle-icon">🧬</div>
+              <div style="font-size:16px;font-weight:500;color:var(--text2)">Your prediction will appear here</div>
+              <div style="font-size:13px">Fill in the patient parameters and click Predict</div>
+            </div>
+            <div class="result-panel" id="result-panel">
+              <div class="card mb-3">
+                <div class="card-title">📈 Risk Assessment</div>
+                <div style="text-align:center">
+                  <div class="risk-ring">
+                    <svg class="ring-svg" width="160" height="160" viewBox="0 0 160 160">
+                      <circle class="ring-track" cx="80" cy="80" r="64" />
+                      <circle class="ring-fill" id="ring-fill" cx="80" cy="80" r="64" stroke-dasharray="0 402"
+                        stroke-dashoffset="0" />
+                    </svg>
+                    <div class="ring-label">
+                      <div class="ring-pct" id="ring-pct">--</div>
+                      <div class="ring-txt">Risk Score</div>
+                    </div>
+                  </div>
+                  <div id="risk-badge" class="risk-badge">—</div>
+                  <div id="risk-label" style="font-size:13px;color:var(--text2);margin-top:8px"></div>
+                </div>
+                <div class="divider" style="margin:20px 0"></div>
+                <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text2)">KEY INSIGHTS</div>
+                <ul class="insight-list" id="insight-list"></ul>
+              </div>
+
+              <div class="card">
+                <div class="card-title">🧠 Feature Impact (SHAP Analysis)</div>
+                <div style="font-size:12px;color:var(--text3);margin-bottom:16px">Which factors are driving this
+                  prediction?</div>
+                <div class="shap-bar-wrap" id="shap-bars"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Explanation Chat -->
+        <div style="margin-top:28px">
+          <div class="card-title" style="margin-bottom:16px">💬 AI Prediction Explainer</div>
+          <div class="ai-chat">
+            <div class="ai-chat-header">
+              <div class="ai-chat-dot"></div>
+              <span style="font-size:14px;font-weight:600">GlucoAI — Prediction Analysis</span>
+            </div>
+            <div class="ai-messages" id="pred-chat-msgs">
+              <div class="ai-msg bot">Run a prediction above, then ask me to explain the results — or ask any question
+                about glucose health factors, risk interpretation, or clinical recommendations.</div>
+            </div>
+            <div class="ai-input-row">
+              <input class="ai-input" id="pred-chat-input"
+                placeholder="e.g. Why is BMI the top factor? What should I do?"
+                onkeydown="if(event.key==='Enter')sendChat('pred')" />
+              <button class="ai-send" id="pred-chat-btn" onclick="sendChat('pred')">Ask →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ANALYTICS PAGE ===== -->
+    <div id="page-analytics" class="page">
+      <div class="section">
+        <div class="section-tag">Data Intelligence</div>
+        <div class="section-title">Analytics Dashboard</div>
+        <div class="section-sub">Deep insights into the Framingham dataset — distributions, correlations, trends, and
+          model performance metrics.</div>
+
+        <div class="dash-grid" style="margin-top:40px">
+          <div class="metric-card">
+            <div class="metric-label">Total Patients</div>
+            <div class="metric-val" style="color:var(--accent)">4,240</div>
+            <div class="metric-trend trend-up">↑ Framingham Cohort</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Avg Glucose</div>
+            <div class="metric-val" style="color:var(--teal)">81.9</div>
+            <div class="metric-sub">mg/dL</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">High Risk Patients</div>
+            <div class="metric-val" style="color:var(--red)">15.2%</div>
+            <div class="metric-trend trend-dn">⚠ Elevated glucose</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Feature Count</div>
+            <div class="metric-val" style="color:var(--amber)">15</div>
+            <div class="metric-sub">Health biomarkers</div>
+          </div>
+        </div>
+
+        <div class="charts-grid">
+          <div class="chart-box">
+            <div class="chart-title">Glucose Level Distribution</div>
+            <div class="chart-sub">Patient count across glucose ranges</div>
+            <div style="position:relative;height:260px">
+              <canvas id="chart-glucose" role="img"
+                aria-label="Histogram of glucose levels across patient population">Glucose distribution across 4240
+                patients.</canvas>
+            </div>
+          </div>
+          <div class="chart-box">
+            <div class="chart-title">BMI vs Glucose Correlation</div>
+            <div class="chart-sub">Risk zone scatter analysis</div>
+            <div style="position:relative;height:260px">
+              <canvas id="chart-bmi-glucose" role="img" aria-label="Scatter plot of BMI versus glucose levels">BMI and
+                glucose correlation across patients.</canvas>
+            </div>
+          </div>
+          <div class="chart-box">
+            <div class="chart-title">Risk Level Distribution</div>
+            <div class="chart-sub">Low / Medium / High stratification</div>
+            <div style="position:relative;height:260px">
+              <canvas id="chart-risk-dist" role="img" aria-label="Donut chart showing risk level distribution">Risk
+                levels: Low 52%, Medium 33%, High 15%.</canvas>
+            </div>
+          </div>
+          <div class="chart-box">
+            <div class="chart-title">Age Group Analysis</div>
+            <div class="chart-sub">Average glucose by age bracket</div>
+            <div style="position:relative;height:260px">
+              <canvas id="chart-age" role="img" aria-label="Bar chart of average glucose by age group">Average glucose
+                by age groups.</canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-box" style="margin-bottom:20px">
+          <div class="chart-title">Feature Importance — Random Forest</div>
+          <div class="chart-sub">Which features contribute most to glucose prediction</div>
+          <div style="position:relative;height:300px">
+            <canvas id="chart-feat-imp" role="img"
+              aria-label="Horizontal bar chart of feature importances from Random Forest model">Feature importances from
+              Random Forest classifier.</canvas>
+          </div>
+        </div>
+
+        <div class="charts-grid">
+          <div class="chart-box">
+            <div class="chart-title">Smoking Status vs Glucose</div>
+            <div class="chart-sub">Average glucose by smoking behavior</div>
+            <div style="position:relative;height:240px">
+              <canvas id="chart-smoke" role="img"
+                aria-label="Bar chart comparing glucose levels by smoking status">Glucose by smoking status.</canvas>
+            </div>
+          </div>
+          <div class="chart-box">
+            <div class="chart-title">Blood Pressure Trends</div>
+            <div class="chart-sub">Systolic & diastolic by risk level</div>
+            <div style="position:relative;height:240px">
+              <canvas id="chart-bp" role="img" aria-label="Grouped bar chart of blood pressure by risk level">Blood
+                pressure across risk levels.</canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== MODEL PERFORMANCE PAGE ===== -->
+    <div id="page-performance" class="page">
+      <div class="section">
+        <div class="section-tag">Model Evaluation</div>
+        <div class="section-title">ML Model Performance</div>
+        <div class="section-sub">Comprehensive comparison of all trained models with precision, recall, F1, and ROC-AUC
+          metrics.</div>
+
+        <div class="model-grid">
+          <div class="model-card selected" onclick="selectModel(this,'rf')">
+            <div class="model-name">🌲 Random Forest <span class="best-badge">Best</span></div>
+            <div class="model-metrics">
+              <div class="model-metric-row"><span>Accuracy</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:87%"></div>
+                </div><span class="model-metric-val text-green">87.3%</span>
+              </div>
+              <div class="model-metric-row"><span>Precision</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:85%"></div>
+                </div><span class="model-metric-val">85.1%</span>
+              </div>
+              <div class="model-metric-row"><span>Recall</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:84%"></div>
+                </div><span class="model-metric-val">84.7%</span>
+              </div>
+              <div class="model-metric-row"><span>F1 Score</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:85%"></div>
+                </div><span class="model-metric-val">84.9%</span>
+              </div>
+              <div class="model-metric-row"><span>ROC-AUC</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:91%"></div>
+                </div><span class="model-metric-val text-accent">0.913</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card" onclick="selectModel(this,'lr')">
+            <div class="model-name">📉 Logistic Regression</div>
+            <div class="model-metrics">
+              <div class="model-metric-row"><span>Accuracy</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:79%"></div>
+                </div><span class="model-metric-val">79.4%</span>
+              </div>
+              <div class="model-metric-row"><span>Precision</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:77%"></div>
+                </div><span class="model-metric-val">77.2%</span>
+              </div>
+              <div class="model-metric-row"><span>Recall</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:78%"></div>
+                </div><span class="model-metric-val">78.1%</span>
+              </div>
+              <div class="model-metric-row"><span>F1 Score</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:77%"></div>
+                </div><span class="model-metric-val">77.6%</span>
+              </div>
+              <div class="model-metric-row"><span>ROC-AUC</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:83%"></div>
+                </div><span class="model-metric-val">0.831</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card" onclick="selectModel(this,'dt')">
+            <div class="model-name">🌳 Decision Tree</div>
+            <div class="model-metrics">
+              <div class="model-metric-row"><span>Accuracy</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:82%"></div>
+                </div><span class="model-metric-val">82.1%</span>
+              </div>
+              <div class="model-metric-row"><span>Precision</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:80%"></div>
+                </div><span class="model-metric-val">80.3%</span>
+              </div>
+              <div class="model-metric-row"><span>Recall</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:81%"></div>
+                </div><span class="model-metric-val">81.0%</span>
+              </div>
+              <div class="model-metric-row"><span>F1 Score</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:80%"></div>
+                </div><span class="model-metric-val">80.6%</span>
+              </div>
+              <div class="model-metric-row"><span>ROC-AUC</span>
+                <div class="model-metric-bar">
+                  <div class="model-metric-fill" style="width:86%"></div>
+                </div><span class="model-metric-val">0.862</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="charts-grid">
+          <div class="chart-box">
+            <div class="chart-title">ROC Curves — All Models</div>
+            <div class="chart-sub">True positive vs false positive rate</div>
+            <div style="position:relative;height:280px">
+              <canvas id="chart-roc" role="img"
+                aria-label="ROC curves for Random Forest, Logistic Regression, and Decision Tree models">ROC curves for
+                all three trained models.</canvas>
+            </div>
+          </div>
+          <div class="chart-box">
+            <div class="chart-title">Model Comparison Radar</div>
+            <div class="chart-sub">Multi-metric performance overview</div>
+            <div style="position:relative;height:280px">
+              <canvas id="chart-radar" role="img"
+                aria-label="Radar chart comparing all three models across metrics">Radar chart of model performance
+                across all metrics.</canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-box">
+          <div class="chart-title">Confusion Matrix — Random Forest</div>
+          <div class="chart-sub">Predicted vs actual classifications across risk levels</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:16px;align-items:center">
+            <div>
+              <table style="width:100%;border-collapse:collapse;font-size:13px;text-align:center">
+                <tr>
+                  <td style="padding:8px;color:var(--text3);font-size:11px"></td>
+                  <td colspan="3"
+                    style="padding:8px;color:var(--text2);font-size:12px;font-weight:600;letter-spacing:.4px">PREDICTED
+                  </td>
+                </tr>
+                <tr>
+                  <td
+                    style="padding:8px;color:var(--text2);font-size:12px;font-weight:600;writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:.4px">
+                    ACTUAL</td>
+                  <td style="padding:6px;color:var(--text3);font-size:11px">Low</td>
+                  <td style="padding:6px;color:var(--text3);font-size:11px">Medium</td>
+                  <td style="padding:6px;color:var(--text3);font-size:11px">High</td>
+                </tr>
+                <tr>
+                  <td style="padding:6px;color:var(--text3);font-size:11px;vertical-align:middle">Low</td>
+                  <td
+                    style="padding:14px;background:rgba(0,214,143,0.2);border-radius:6px;font-weight:700;color:var(--green);font-size:15px">
+                    891</td>
+                  <td
+                    style="padding:14px;background:rgba(255,77,106,0.1);border-radius:6px;color:var(--text2);font-size:15px">
+                    67</td>
+                  <td
+                    style="padding:14px;background:rgba(255,77,106,0.1);border-radius:6px;color:var(--text2);font-size:15px">
+                    12</td>
+                </tr>
+                <tr>
+                  <td style="padding:6px;color:var(--text3);font-size:11px;vertical-align:middle">Medium</td>
+                  <td
+                    style="padding:14px;background:rgba(255,77,106,0.1);border-radius:6px;color:var(--text2);font-size:15px">
+                    45</td>
+                  <td
+                    style="padding:14px;background:rgba(0,214,143,0.2);border-radius:6px;font-weight:700;color:var(--green);font-size:15px">
+                    522</td>
+                  <td
+                    style="padding:14px;background:rgba(255,77,106,0.1);border-radius:6px;color:var(--text2);font-size:15px">
+                    38</td>
+                </tr>
+                <tr>
+                  <td style="padding:6px;color:var(--text3);font-size:11px;vertical-align:middle">High</td>
+                  <td
+                    style="padding:14px;background:rgba(255,77,106,0.1);border-radius:6px;color:var(--text2);font-size:15px">
+                    8</td>
+                  <td
+                    style="padding:14px;background:rgba(255,77,106,0.1);border-radius:6px;color:var(--text2);font-size:15px">
+                    28</td>
+                  <td
+                    style="padding:14px;background:rgba(0,214,143,0.2);border-radius:6px;font-weight:700;color:var(--green);font-size:15px">
+                    237</td>
+                </tr>
+              </table>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div style="background:var(--surface);border-radius:12px;padding:16px;border:1px solid var(--border)">
+                <div style="font-size:12px;color:var(--text3);margin-bottom:4px">True Positive Rate (Sensitivity)</div>
+                <div style="font-size:22px;font-weight:700;color:var(--green)">84.7%</div>
+              </div>
+              <div style="background:var(--surface);border-radius:12px;padding:16px;border:1px solid var(--border)">
+                <div style="font-size:12px;color:var(--text3);margin-bottom:4px">True Negative Rate (Specificity)</div>
+                <div style="font-size:22px;font-weight:700;color:var(--teal)">91.2%</div>
+              </div>
+              <div style="background:var(--surface);border-radius:12px;padding:16px;border:1px solid var(--border)">
+                <div style="font-size:12px;color:var(--text3);margin-bottom:4px">Overall Accuracy</div>
+                <div style="font-size:22px;font-weight:700;color:var(--accent)">87.3%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== UPLOAD PAGE ===== -->
+    <div id="page-upload" class="page">
+      <div class="section">
+        <div class="section-tag">Batch Processing</div>
+        <div class="section-title">Upload Patient Data</div>
+        <div class="section-sub">Upload a CSV or Excel file with patient health records for bulk glucose risk prediction
+          with automatic validation.</div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:40px">
+          <div>
+            <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()"
+              ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
+              <div class="upload-icon">📂</div>
+              <div class="upload-text">Drop your file here or click to browse</div>
+              <div class="upload-sub">Automatically validates columns and data types</div>
+              <div class="file-type-pills">
+                <span class="pill">.CSV</span>
+                <span class="pill">.XLSX</span>
+                <span class="pill">.XLS</span>
+              </div>
+            </div>
+            <input type="file" id="file-input" accept=".csv,.xlsx,.xls" style="display:none"
+              onchange="handleFileUpload(event)" />
+
+            <div id="file-info" class="hidden"
+              style="margin-top:16px;padding:16px;background:var(--bg2);border:1px solid var(--border);border-radius:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                <div style="font-size:14px;font-weight:600" id="file-name">—</div>
+                <div style="font-size:12px;color:var(--text3)" id="file-size">—</div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+                <div style="text-align:center;padding:10px;background:var(--surface);border-radius:8px">
+                  <div style="font-size:18px;font-weight:700;color:var(--accent)" id="upload-rows">—</div>
+                  <div style="font-size:11px;color:var(--text3)">Rows</div>
+                </div>
+                <div style="text-align:center;padding:10px;background:var(--surface);border-radius:8px">
+                  <div style="font-size:18px;font-weight:700;color:var(--teal)" id="upload-cols">—</div>
+                  <div style="font-size:11px;color:var(--text3)">Columns</div>
+                </div>
+                <div style="text-align:center;padding:10px;background:var(--surface);border-radius:8px">
+                  <div style="font-size:18px;font-weight:700;color:var(--green)" id="upload-valid">✓</div>
+                  <div style="font-size:11px;color:var(--text3)">Status</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:20px">
+              <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:12px">Required Columns:</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px">
+                <span class="pill">age</span><span class="pill">male</span><span class="pill">BMI</span>
+                <span class="pill">sysBP</span><span class="pill">diaBP</span><span class="pill">totChol</span>
+                <span class="pill">heartRate</span><span class="pill">currentSmoker</span>
+              </div>
+            </div>
+
+            <button onclick="downloadTemplate()" class="btn-secondary" style="margin-top:20px;width:100%">
+              📥 Download CSV Template
+            </button>
+          </div>
+
+          <div>
+            <div class="card-title" style="margin-bottom:16px">📋 Data Preview</div>
+            <div id="data-preview-area" style="color:var(--text3);font-size:13px;text-align:center;padding:60px 20px">
+              <div style="font-size:36px;margin-bottom:12px;opacity:.3">📊</div>
+              Upload a file to preview your data
+            </div>
+
+            <div id="batch-result-area" class="hidden" style="margin-top:20px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+                <div style="font-size:14px;font-weight:600">Batch Prediction Results</div>
+                <button onclick="downloadResults()" class="btn-primary" style="padding:8px 16px;font-size:13px">⬇
+                  Download CSV</button>
+              </div>
+              <div id="batch-results-table"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ABOUT PAGE ===== -->
+    <div id="page-about" class="page">
+      <div class="section">
+        <div class="section-tag">Project Overview</div>
+        <div class="section-title">About GlucoPredict</div>
+        <div class="section-sub">A clinical-grade machine learning system for glucose risk stratification, built on the
+          Framingham Heart Study dataset.</div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:48px">
+          <div>
+            <div class="card" style="margin-bottom:20px">
+              <div class="card-title">🎯 Problem Statement</div>
+              <p style="font-size:14px;color:var(--text2);line-height:1.8">Abnormal blood glucose is a silent epidemic —
+                affecting millions before clinical symptoms appear. Traditional screening is reactive, costly, and
+                inaccessible. GlucoPredict uses longitudinal cardiovascular data to enable proactive, data-driven risk
+                stratification at scale.</p>
+            </div>
+            <div class="card">
+              <div class="card-title">🗂️ Dataset: Framingham Heart Study</div>
+              <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+                <div
+                  style="display:flex;justify-content:space-between;padding:10px;background:var(--surface);border-radius:8px">
+                  <span style="color:var(--text2)">Total Records</span><span
+                    style="font-weight:600;color:var(--accent)">4,240 patients</span>
+                </div>
+                <div
+                  style="display:flex;justify-content:space-between;padding:10px;background:var(--surface);border-radius:8px">
+                  <span style="color:var(--text2)">Features</span><span style="font-weight:600">15 health
+                    biomarkers</span>
+                </div>
+                <div
+                  style="display:flex;justify-content:space-between;padding:10px;background:var(--surface);border-radius:8px">
+                  <span style="color:var(--text2)">Target Variable</span><span style="font-weight:600">Blood glucose
+                    level</span>
+                </div>
+                <div
+                  style="display:flex;justify-content:space-between;padding:10px;background:var(--surface);border-radius:8px">
+                  <span style="color:var(--text2)">Study Location</span><span style="font-weight:600">Framingham, MA,
+                    USA</span>
+                </div>
+                <div
+                  style="display:flex;justify-content:space-between;padding:10px;background:var(--surface);border-radius:8px">
+                  <span style="color:var(--text2)">Task Type</span><span style="font-weight:600">Multi-class
+                    Classification</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div style="margin-bottom:16px;font-size:14px;font-weight:600;color:var(--text2)">ML WORKFLOW</div>
+            <div class="timeline">
+              <div class="tl-item">
+                <div class="tl-dot">1</div>
+                <div class="tl-content">
+                  <div class="tl-step">Step 01</div>
+                  <div class="tl-title">Data Ingestion & EDA</div>
+                  <div class="tl-desc">Loaded framingham.csv, explored distributions of glucose, BMI, age, cholesterol.
+                    Identified skewness, outliers, and class imbalance using pandas and matplotlib.</div>
+                </div>
+              </div>
+              <div class="tl-item">
+                <div class="tl-dot">2</div>
+                <div class="tl-content">
+                  <div class="tl-step">Step 02</div>
+                  <div class="tl-title">Data Cleaning & Engineering</div>
+                  <div class="tl-desc">Handled missing values with median imputation. Encoded categoricals. Applied
+                    StandardScaler. Created risk tier labels from glucose quantiles.</div>
+                </div>
+              </div>
+              <div class="tl-item">
+                <div class="tl-dot">3</div>
+                <div class="tl-content">
+                  <div class="tl-step">Step 03</div>
+                  <div class="tl-title">Model Training & Tuning</div>
+                  <div class="tl-desc">Trained Random Forest, Logistic Regression, and Decision Tree. Used GridSearchCV
+                    with 5-fold cross-validation for hyperparameter optimization.</div>
+                </div>
+              </div>
+              <div class="tl-item">
+                <div class="tl-dot">4</div>
+                <div class="tl-content">
+                  <div class="tl-step">Step 04</div>
+                  <div class="tl-title">Evaluation & Explainability</div>
+                  <div class="tl-desc">Evaluated with ROC-AUC, precision, recall, F1. Applied SHAP TreeExplainer for
+                    feature attribution. Random Forest achieved best performance at 87.3%.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-tag" style="margin-top:0">Technology Stack</div>
+        <div class="section-title" style="font-size:28px">Built with modern tools</div>
+        <div class="tech-grid">
+          <div class="tech-pill">
+            <div class="tech-pill-icon">🐍</div>
+            <div class="tech-pill-name">Python</div>
+            <div class="tech-pill-cat">Core Language</div>
+          </div>
+          <div class="tech-pill">
+            <div class="tech-pill-icon">⚗️</div>
+            <div class="tech-pill-name">Flask</div>
+            <div class="tech-pill-cat">Backend API</div>
+          </div>
+          <div class="tech-pill">
+            <div class="tech-pill-icon">⚛️</div>
+            <div class="tech-pill-name">React.js</div>
+            <div class="tech-pill-cat">Frontend</div>
+          </div>
+          <div class="tech-pill">
+            <div class="tech-pill-icon">🌊</div>
+            <div class="tech-pill-name">Tailwind CSS</div>
+            <div class="tech-pill-cat">Styling</div>
+          </div>
+          <div class="tech-pill">
+            <div class="tech-pill-icon">🌲</div>
+            <div class="tech-pill-name">Scikit-learn</div>
+            <div class="tech-pill-cat">ML Models</div>
+          </div>
+          <div class="tech-pill">
+            <div class="tech-pill-icon">🐼</div>
+            <div class="tech-pill-name">Pandas</div>
+            <div class="tech-pill-cat">Data Processing</div>
+          </div>
+          <div class="tech-pill">
+            <div class="tech-pill-icon">🔢</div>
+            <div class="tech-pill-name">NumPy</div>
+            <div class="tech-pill-cat">Numerics</div>
+          </div>
+          <div class="tech-pill">
+            <div class="tech-pill-icon">🧠</div>
+            <div class="tech-pill-name">SHAP</div>
+            <div class="tech-pill-cat">Explainability</div>
+          </div>
+          <div class="tech-pill">
+            <div class="tech-pill-icon">📊</div>
+            <div class="tech-pill-name">Chart.js</div>
+            <div class="tech-pill-cat">Visualization</div>
+          </div>
+          <div class="tech-pill">
+            <div class="tech-pill-icon">🤖</div>
+            <div class="tech-pill-name">OpenAI</div>
+            <div class="tech-pill-cat">AI Assistant</div>
+          </div>
+          <div class="tech-pill">
+            <div class="tech-pill-icon">🐳</div>
+            <div class="tech-pill-name">Docker</div>
+            <div class="tech-pill-cat">Deployment</div>
+          </div>
+          <div class="tech-pill">
+            <div class="tech-pill-icon">☁️</div>
+            <div class="tech-pill-name">AWS / GCP</div>
+            <div class="tech-pill-cat">Cloud</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CONTACT PAGE ===== -->
+    <div id="page-contact" class="page">
+      <div class="section">
+        <div class="section-tag">Get In Touch</div>
+        <div class="section-title">Let's Connect</div>
+        <div class="section-sub">Questions about the project, collaboration opportunities, or feedback — reach out
+          directly.</div>
+        <div class="contact-grid">
+          <div>
+            <div class="card-title" style="margin-bottom:20px">✉️ Send a Message</div>
+            <div class="contact-form">
+              <div class="form-group"><label>Your Name</label><input type="text" placeholder="Jane Smith" id="c-name" />
+              </div>
+              <div class="form-group"><label>Email Address</label><input type="email" placeholder="jane@example.com"
+                  id="c-email" /></div>
+              <div class="form-group"><label>Subject</label>
+                <select id="c-subject">
+                  <option>General Inquiry</option>
+                  <option>Collaboration Request</option>
+                  <option>Technical Question</option>
+                  <option>Research Partnership</option>
+                  <option>Bug Report</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Message</label><textarea id="c-msg"
+                  placeholder="Tell me about your interest in GlucoPredict..."></textarea></div>
+              <button class="btn-primary" onclick="sendContact()" style="width:100%;justify-content:center">Send Message
+                →</button>
+            </div>
+          </div>
+          <div>
+            <div class="card-title" style="margin-bottom:20px">🔗 Find Me Online</div>
+            <div class="social-links">
+              <a class="social-link" href="https://github.com" target="_blank">
+                <div class="social-icon" style="background:var(--surface2)">⌥</div>
+                <div>
+                  <div class="social-name">GitHub</div>
+                  <div class="social-handle">github.com/glucopredict</div>
+                </div>
+              </a>
+              <a class="social-link" href="https://linkedin.com" target="_blank">
+                <div class="social-icon" style="background:rgba(0,119,181,0.2);color:#0077b5">in</div>
+                <div>
+                  <div class="social-name">LinkedIn</div>
+                  <div class="social-handle">linkedin.com/in/developer</div>
+                </div>
+              </a>
+              <a class="social-link" href="#" target="_blank">
+                <div class="social-icon" style="background:var(--accent3)">📊</div>
+                <div>
+                  <div class="social-name">Kaggle</div>
+                  <div class="social-handle">kaggle.com/glucopredict</div>
+                </div>
+              </a>
+              <a class="social-link" href="#" target="_blank">
+                <div class="social-icon" style="background:var(--green2)">📝</div>
+                <div>
+                  <div class="social-name">ResearchGate</div>
+                  <div class="social-handle">View Project Paper</div>
+                </div>
+              </a>
+            </div>
+            <div class="card" style="margin-top:24px">
+              <div class="card-title">📋 Project Repository</div>
+              <div style="font-size:13px;color:var(--text2);margin-bottom:14px">Complete source code, notebooks, trained
+                models, and deployment configs.</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <span class="pill"
+                  style="background:var(--green2);color:var(--green);border-color:rgba(0,214,143,0.3)">⭐ Star on
+                  GitHub</span>
+                <span class="pill">🍴 Fork & Extend</span>
+                <span class="pill">📥 Clone Project</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /app -->
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+
+</html>
